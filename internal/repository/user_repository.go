@@ -3,6 +3,8 @@ package repository
 import (
 	"bookstack/internal/dto/request"
 	"bookstack/internal/models"
+	"errors"
+	"fmt"
 
 	"github.com/jinzhu/copier"
 	"gorm.io/gorm"
@@ -15,6 +17,8 @@ type UserRepository interface {
 	UpdateUser(id int, user request.UserUpdateRequest) (models.User, error)
 	DeleteUser(id int) error
 	GetUserByEmail(email string) (*models.User, error)
+	GetUserById(int) (*models.User, error)
+	FindIfUserHasRole(uint, []models.Role) error
 }
 
 type UserRepositoryImpl struct {
@@ -25,6 +29,18 @@ func NewUserRepositoryImpl(db *gorm.DB) UserRepository {
 	return &UserRepositoryImpl{
 		db: db,
 	}
+}
+
+func (u *UserRepositoryImpl) GetUserById(userId int) (*models.User, error) {
+	var existingUser models.User
+	err := u.db.First(&existingUser, userId).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, fmt.Errorf("user not found")
+		}
+		return nil, err
+	}
+	return &existingUser, nil
 }
 
 func (r *UserRepositoryImpl) NewUser(user models.User) (models.User, error) {
@@ -91,4 +107,33 @@ func (r *UserRepositoryImpl) GetUserByEmail(email string) (*models.User, error) 
 		return nil, err
 	}
 	return &user, nil
+}
+
+func (u *UserRepositoryImpl) FindIfUserHasRole(userID uint, roles []models.Role) error {
+	var count int64
+
+	// 🔹 Trích xuất tên role từ danh sách roles
+	roleNames := make([]string, len(roles))
+	for i, role := range roles {
+		roleNames[i] = role.Name
+	}
+
+	// 🔹 Truy vấn kiểm tra User có Role không
+	result := u.db.Model(&models.User{}).
+		Joins("JOIN user_roles ON users.id = user_roles.user_id").
+		Joins("JOIN roles ON user_roles.role_id = roles.id").
+		Where("users.id = ? AND roles.name IN ?", userID, roleNames).
+		Select("COUNT(*)").Scan(&count)
+
+	// 🔹 Kiểm tra lỗi query
+	if result.Error != nil {
+		return result.Error
+	}
+
+	// 🔹 Kiểm tra nếu không tìm thấy Role nào
+	if count == 0 {
+		return gorm.ErrRecordNotFound
+	}
+
+	return nil // ✅ User có ít nhất một Role phù hợp
 }

@@ -8,4 +8,5 @@ import (
 
 var RepositorySet = wire.NewSet(
 	repository.NewUserRepositoryImpl,
+	repository.NewPermissionRepositoryImpl,
 )
