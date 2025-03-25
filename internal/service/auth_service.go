@@ -1,6 +1,7 @@
 package service
 
 import (
+	"bookstack/config"
 	"bookstack/internal/dto/request"
 	"bookstack/internal/models"
 	"bookstack/internal/repository"
@@ -17,12 +18,14 @@ type AuthService interface {
 }
 
 type AuthServiceImpl struct {
-	repo repository.UserRepository
+	repo   repository.UserRepository
+	config *config.Config
 }
 
-func NewAuthServiceImpl(repo repository.UserRepository) AuthService {
+func NewAuthServiceImpl(repo repository.UserRepository, conf *config.Config) AuthService {
 	return &AuthServiceImpl{
-		repo: repo,
+		repo:   repo,
+		config: conf,
 	}
 }
 
@@ -56,11 +59,11 @@ func (s *AuthServiceImpl) Login(email, password string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("invalid password")
 	}
-	// token, err := utils.GenerateToken(user.ID)
-	// if err != nil {
-	// 	return "", err
-	// }
-	return "Token not done", nil
+	token, err := utils.GenerateAccessToken(s.config.AccessTokenExpiresIn, user.ID, s.config.AccessTokenSecret)
+	if err != nil {
+		return "", err
+	}
+	return token, nil
 }
 func (s *AuthServiceImpl) Logout(token string) error {
 	// err := utils.RevokeToken(token)

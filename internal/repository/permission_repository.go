@@ -25,7 +25,7 @@ func NewPermissionRepositoryImpl(Db *gorm.DB) PermissionRepository {
 }
 func (p *PermissionRepositoryImpl) FindIfExist(name string) (*models.Permission, error) {
 	var permission models.Permission
-	err := p.DB.Where("name = ?", name).Find(&permission).Error
+	err := p.DB.Where("name = ?", name).First(&permission).Error
 	if err != nil {
 		return nil, err
 	}

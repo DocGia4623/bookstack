@@ -24,7 +24,7 @@ func InitializeApp() (*App, error) {
 	}
 	db := config.ConnectDB(configConfig)
 	userRepository := repository.NewUserRepositoryImpl(db)
-	authService := service.NewAuthServiceImpl(userRepository)
+	authService := service.NewAuthServiceImpl(userRepository, configConfig)
 	authenticationController := controller.NewAuthenticationController(authService)
 	userService := service.NewUserServiceImpl(userRepository)
 	userController := controller.NewUserController(userService)
