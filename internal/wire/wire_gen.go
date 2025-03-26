@@ -9,6 +9,7 @@ package wire
 import (
 	"bookstack/config"
 	"bookstack/internal/controller"
+	"bookstack/internal/middleware"
 	"bookstack/internal/repository"
 	"bookstack/internal/service"
 	"github.com/google/wire"
@@ -23,14 +24,21 @@ func InitializeApp() (*App, error) {
 		return nil, err
 	}
 	db := config.ConnectDB(configConfig)
-	userRepository := repository.NewUserRepositoryImpl(db)
+	userRepository := repository.NewUserRepositoryImpl(db, configConfig)
 	authService := service.NewAuthServiceImpl(userRepository, configConfig)
 	authenticationController := controller.NewAuthenticationController(authService)
 	userService := service.NewUserServiceImpl(userRepository)
 	userController := controller.NewUserController(userService)
+	bookRepository := repository.NewBookRepositoryImpl(db)
+	bookService := service.NewBookServiceImpl(bookRepository)
+	bookController := controller.NewBookController(bookService)
+	permissionRepository := repository.NewPermissionRepositoryImpl(db)
+	middlewareMiddleware := middleware.NewAuthorizeMiddleware(userRepository, permissionRepository, configConfig)
 	app := &App{
 		AuthenticationController: authenticationController,
 		UserController:           userController,
+		BookController:           bookController,
+		Middleware:               middlewareMiddleware,
 	}
 	return app, nil
 }
@@ -38,6 +46,7 @@ func InitializeApp() (*App, error) {
 // injector.go:
 
 var AppSet = wire.NewSet(config.LoadConfig, config.ConnectDB, RepositorySet,
+	MiddlerwareSet,
 	ServiceSet,
 	ControllerSet, wire.Struct(new(App), "*"),
 )
@@ -45,4 +54,6 @@ var AppSet = wire.NewSet(config.LoadConfig, config.ConnectDB, RepositorySet,
 type App struct {
 	AuthenticationController *controller.AuthenticationController
 	UserController           *controller.UserController
+	BookController           *controller.BookController
+	Middleware               *middleware.Middleware
 }

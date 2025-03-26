@@ -2,6 +2,7 @@ package main
 
 import (
 	"bookstack/config"
+	"bookstack/internal/repository"
 	"bookstack/internal/wire"
 	"bookstack/routes"
 	"log"
@@ -26,7 +27,9 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to initialize app: %v", err)
 	}
+	repository.SeedRolesAndPermissions()
 	routes.AuthRoute(*app.AuthenticationController, router)
-	routes.UserRoute(*app.UserController, router)
+	routes.UserRoute(*app.UserController, app.Middleware, router)
+	routes.BookRoute(*app.BookController, router)
 	router.Run(":8080")
 }

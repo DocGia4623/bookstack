@@ -4,6 +4,7 @@ import (
 	"bookstack/internal/dto/request"
 	"bookstack/internal/dto/response"
 	"bookstack/internal/service"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -43,10 +44,24 @@ func (controller *AuthenticationController) Register(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, webResponse)
 		return
 	}
+
+	// // Gửi email xác nhận
+	// err = utils.SendVerificationEmail(user.Email, user.FullName)
+	// if err != nil {
+	// 	webResponse = response.WebResponse{
+	// 		Code:    http.StatusInternalServerError,
+	// 		Status:  "error",
+	// 		Message: "User registered but failed to send verification email",
+	// 		Data:    nil,
+	// 	}
+	// 	c.JSON(http.StatusInternalServerError, webResponse)
+	// 	return
+	// }
+
 	webResponse = response.WebResponse{
 		Code:    http.StatusOK,
 		Status:  "success",
-		Message: "User registered successfully",
+		Message: "User registered successfully, Please check your email to verify your account.",
 		Data:    user,
 	}
 	c.JSON(http.StatusOK, webResponse)
@@ -65,10 +80,24 @@ func (controller *AuthenticationController) Login(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, webResponse)
 		return
 	}
-	token, err := controller.AuthenticationService.Login(userRequest.Email, userRequest.Password)
+	refreshToken, accessToken, userId, err := controller.AuthenticationService.Login(userRequest.Email, userRequest.Password)
 	if err != nil {
 		webResponse = response.WebResponse{
 			Code:    http.StatusUnauthorized,
+			Status:  "error",
+			Message: err.Error(),
+			Data:    nil,
+		}
+		c.JSON(http.StatusUnauthorized, webResponse)
+		return
+	}
+	c.SetCookie("refresh_token", refreshToken, 3600*24*7, "/", "", false, true)
+	log.Println("Set refresh token in cookie: " + refreshToken) // ✅ Debug log
+
+	err = controller.AuthenticationService.SaveRefreshToken(refreshToken, userId)
+	if err != nil {
+		webResponse = response.WebResponse{
+			Code:    http.StatusInternalServerError,
 			Status:  "error",
 			Message: err.Error(),
 			Data:    nil,
@@ -80,7 +109,10 @@ func (controller *AuthenticationController) Login(c *gin.Context) {
 		Code:    http.StatusOK,
 		Status:  "success",
 		Message: "User logged in successfully",
-		Data:    token,
+		Data: response.LoginResponse{
+			AccessToken:  accessToken,
+			RefreshToken: refreshToken,
+		},
 	}
 	c.JSON(http.StatusOK, webResponse)
 }

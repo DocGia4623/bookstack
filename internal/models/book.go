@@ -10,13 +10,14 @@ type Book struct {
 	Title       string    `json:"title"`       // Tiêu đề của sách
 	Description string    `json:"description"` // Mô tả của sách
 	Slug        string    `json:"slug"`        // Đường dẫn thân thiện
-	ShelfID     uint      `json:"shelf_id"`    // Khóa ngoại liên kết đến Shelf
-	Shelf       Shelf     `gorm:"foreignKey:ShelfID"`
+	ShelveID    uint      `json:"shelve_id"`   // Khóa ngoại liên kết đến Shelf
+	Shelve      Shelve    `gorm:"foreignKey:ShelveID"`
 	Chapters    []Chapter `json:"chapters"`                                             // Danh sách chương của sách
 	Tags        []Tag     `gorm:"polymorphic:Entity;polymorphicValue:book" json:"tags"` // Tags liên kết với sách
-	Restricted  bool      `json:"restricted"`                                           // Trường kiểm soát quyền truy cập
-	CreatedBy   uint      `json:"created_by"`                                           // ID của người tạo sách
-	UpdatedBy   uint      `json:"updated_by"`                                           // ID của người cập nhật sách
+	Comments    []Comment `gorm:"polymorphic:Entity;polymorphicValue:book" json:"comments"`
+	Restricted  bool      `json:"restricted"` // Trường kiểm soát quyền truy cập
+	CreatedBy   uint      `json:"created_by"` // ID của người tạo sách
+	UpdatedBy   uint      `json:"updated_by"` // ID của người cập nhật sách
 }
 
 // Chapter đại diện cho chương của một cuốn sách
@@ -42,15 +43,16 @@ type Page struct {
 }
 
 // Shelf đại diện cho kệ chứa sách, dùng để phân loại sách theo chủ đề hoặc danh mục
-type Shelf struct {
+type Shelve struct {
 	gorm.Model
-	Name        string `json:"name"`                                                  // Tên kệ
-	Description string `json:"description"`                                           // Mô tả kệ
-	Order       int    `json:"order"`                                                 // Thứ tự hiển thị của kệ
-	Books       []Book `json:"books"`                                                 // Danh sách sách trong kệ
-	Tags        []Tag  `gorm:"polymorphic:Entity;polymorphicValue:shelf" json:"tags"` // Tags liên kết với kệ
-	CreatedBy   uint   `json:"created_by"`                                            // ID của người tạo kệ
-	UpdatedBy   uint   `json:"updated_by"`                                            // ID của người cập nhật kệ
+	Name        string    `json:"name"`                                                  // Tên kệ
+	Description string    `json:"description"`                                           // Mô tả kệ
+	Order       int       `json:"order"`                                                 // Thứ tự hiển thị của kệ
+	Books       []Book    `json:"books"`                                                 // Danh sách sách trong kệ
+	Tags        []Tag     `gorm:"polymorphic:Entity;polymorphicValue:shelf" json:"tags"` // Tags liên kết với kệ
+	Comments    []Comment `gorm:"polymorphic:Entity;polymorphicValue:shelf" json:"comments"`
+	CreatedBy   uint      `json:"created_by"` // ID của người tạo kệ
+	UpdatedBy   uint      `json:"updated_by"` // ID của người cập nhật kệ
 }
 
 // Tag dùng để gắn nhãn mô tả, từ khóa cho các entity (Book, Chapter, Page,...)
@@ -61,4 +63,16 @@ type Tag struct {
 	Name       string `json:"name"`        // Tên của tag
 	Value      string `json:"value"`       // Giá trị của tag
 	Order      int    `json:"order"`       // Thứ tự sắp xếp nếu cần
+}
+
+// Comment của sách và kệ sách
+
+type Comment struct {
+	gorm.Model
+	EntityID   uint   `json:"entity_id"`   // ID của entity (Book hoặc Shelve)
+	EntityType string `json:"entity_type"` // Loại entity (book, shelf)
+	Rating     int    `json:"rating"`
+	Text       string `json:"text"`
+	CreatedBy  int    `json:"created_by"`
+	ParentID   int    `json:"parent_id"`
 }

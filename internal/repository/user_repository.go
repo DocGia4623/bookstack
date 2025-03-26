@@ -1,8 +1,10 @@
 package repository
 
 import (
+	"bookstack/config"
 	"bookstack/internal/dto/request"
 	"bookstack/internal/models"
+	"bookstack/utils"
 	"errors"
 	"fmt"
 
@@ -19,16 +21,49 @@ type UserRepository interface {
 	GetUserByEmail(email string) (*models.User, error)
 	GetUserById(int) (*models.User, error)
 	FindIfUserHasRole(uint, []models.Role) error
+	SaveRefreshToken(string, int) error
 }
 
 type UserRepositoryImpl struct {
-	db *gorm.DB
+	db     *gorm.DB
+	config *config.Config
 }
 
-func NewUserRepositoryImpl(db *gorm.DB) UserRepository {
+func NewUserRepositoryImpl(db *gorm.DB, conf *config.Config) UserRepository {
 	return &UserRepositoryImpl{
-		db: db,
+		db:     db,
+		config: conf,
 	}
+}
+
+func (u *UserRepositoryImpl) SaveRefreshToken(token string, userId int) error {
+	user, err := u.GetUserById(userId)
+	if err != nil {
+		return err
+	}
+	if user.RefreshToken.Token != "" {
+		_, _, err := utils.ValidateRefreshToken(user.RefreshToken.Token, u.config.RefreshTokenSecret)
+		if err == nil {
+			return nil
+		}
+	}
+	// Xóa refresh token cũ của user (nếu có)
+	if err := u.db.Where("user_id = ?", userId).Delete(&models.RefreshToken{}).Error; err != nil {
+		return err
+	}
+
+	// Tạo refresh token mới
+	newRefreshToken := models.RefreshToken{
+		Token:  token,
+		UserID: userId,
+	}
+
+	// Lưu refresh token mới vào database
+	if err := u.db.Create(&newRefreshToken).Error; err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (u *UserRepositoryImpl) GetUserById(userId int) (*models.User, error) {
@@ -43,8 +78,19 @@ func (u *UserRepositoryImpl) GetUserById(userId int) (*models.User, error) {
 	return &existingUser, nil
 }
 
+func (r *UserRepositoryImpl) GetRoleUser() (models.Role, error) {
+	var role models.Role
+	err := r.db.Where("name = ?", "user").First(&role).Error
+	return role, err
+}
+
 func (r *UserRepositoryImpl) NewUser(user models.User) (models.User, error) {
-	err := r.db.Create(&user).Error
+	role, err := r.GetRoleUser()
+	if err != nil {
+		return models.User{}, err
+	}
+	user.Roles = append(user.Roles, role)
+	err = r.db.Create(&user).Error
 	if err != nil {
 		return models.User{}, err
 	}

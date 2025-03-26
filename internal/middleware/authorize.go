@@ -16,10 +16,10 @@ import (
 type Middleware struct {
 	UserRepo       repository.UserRepository
 	PermissionRepo repository.PermissionRepository
-	config         config.Config
+	config         *config.Config
 }
 
-func NewAuthorizeMiddleware(userRepo repository.UserRepository, permissionRepo repository.PermissionRepository, conf config.Config) *Middleware {
+func NewAuthorizeMiddleware(userRepo repository.UserRepository, permissionRepo repository.PermissionRepository, conf *config.Config) *Middleware {
 	return &Middleware{
 		UserRepo:       userRepo,
 		PermissionRepo: permissionRepo,
