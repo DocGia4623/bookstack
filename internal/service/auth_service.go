@@ -17,6 +17,7 @@ type AuthService interface {
 	Login(email, password string) (string, string, int, error)
 	Logout(token string) error
 	SaveRefreshToken(string, int) error
+	RefreshToken(token string, signedKey string) (string, string, error)
 }
 
 type AuthServiceImpl struct {
@@ -82,4 +83,46 @@ func (s *AuthServiceImpl) Logout(token string) error {
 	// 	return err
 	// }
 	return nil
+}
+
+func (a *AuthServiceImpl) RefreshToken(token string, signedKey string) (string, string, error) {
+	// Kiểm tra refresh token có trong database không
+	_, err := a.repo.FindByToken(token)
+	if err != nil {
+		return "", "", fmt.Errorf("cant find refresh token")
+	}
+	// Kiểm tra token có hợp lệ không
+	config, _ := config.LoadConfig()
+	sub, expRaw, err := utils.ValidateRefreshToken(token, config.RefreshTokenSecret)
+	if err != nil {
+		return "", "", fmt.Errorf("refresh token is invalid: %w", err)
+	}
+
+	// Xóa refresh token cũ khỏi database
+	a.repo.DeleteToken(token)
+
+	// Chuyển `expRaw` từ `interface{}` về `int64`
+	expFloat, ok := expRaw.(float64)
+	if !ok {
+		return "", "", fmt.Errorf("invalid token expiration format")
+	}
+	exp := int64(expFloat) // Chuyển thành kiểu int64 (UNIX timestamp)
+
+	// Tạo access token mới
+	accessToken, err := utils.GenerateAccessToken(config.AccessTokenExpiresIn, sub, config.AccessTokenSecret)
+	if err != nil {
+		return "", "", fmt.Errorf("cannot generate access token")
+	}
+	// Tạo refresh token mới
+	newRefreshToken, err := utils.GenerateRefreshToken(exp, sub, config.RefreshTokenSecret)
+	if err != nil {
+		return "", "", fmt.Errorf("cannot generate refresh token")
+	}
+
+	// Lưu refresh token mới vào database
+	a.repo.SaveToken(models.RefreshToken{
+		Token: newRefreshToken,
+	})
+
+	return accessToken, newRefreshToken, nil
 }

@@ -22,6 +22,9 @@ type UserRepository interface {
 	GetUserById(int) (*models.User, error)
 	FindIfUserHasRole(uint, []models.Role) error
 	SaveRefreshToken(string, int) error
+	SaveToken(refreshToken models.RefreshToken) error
+	FindByToken(token string) (*models.RefreshToken, error)
+	DeleteToken(token string) error
 }
 
 type UserRepositoryImpl struct {
@@ -34,6 +37,25 @@ func NewUserRepositoryImpl(db *gorm.DB, conf *config.Config) UserRepository {
 		db:     db,
 		config: conf,
 	}
+}
+
+func (u *UserRepositoryImpl) SaveToken(refreshToken models.RefreshToken) error {
+	result := u.db.Save(&refreshToken)
+	return result.Error
+
+}
+func (u *UserRepositoryImpl) FindByToken(token string) (*models.RefreshToken, error) {
+	var refreshToken models.RefreshToken
+	result := u.db.Where("token = ?", token).First(&refreshToken)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return &refreshToken, nil
+}
+func (u *UserRepositoryImpl) DeleteToken(token string) error {
+	var refreshToken models.RefreshToken
+	result := u.db.Where("token = ?", token).Delete(&refreshToken)
+	return result.Error
 }
 
 func (u *UserRepositoryImpl) SaveRefreshToken(token string, userId int) error {

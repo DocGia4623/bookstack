@@ -31,7 +31,7 @@ func InitializeApp() (*App, error) {
 	userController := controller.NewUserController(userService)
 	bookRepository := repository.NewBookRepositoryImpl(db)
 	bookService := service.NewBookServiceImpl(bookRepository)
-	bookController := controller.NewBookController(bookService)
+	bookController := controller.NewBookController(bookService, userService)
 	permissionRepository := repository.NewPermissionRepositoryImpl(db)
 	middlewareMiddleware := middleware.NewAuthorizeMiddleware(userRepository, permissionRepository, configConfig)
 	app := &App{

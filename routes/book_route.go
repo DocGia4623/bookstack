@@ -10,5 +10,6 @@ func BookRoute(bookController controller.BookController, router *gin.Engine) {
 	BookRoutes := router.Group("/book")
 	{
 		BookRoutes.POST("/create", bookController.CreateBook)
+		BookRoutes.POST("/createshelve", bookController.CreateShelve)
 	}
 }

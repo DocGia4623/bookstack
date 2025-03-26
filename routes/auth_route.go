@@ -12,5 +12,6 @@ func AuthRoute(authController controller.AuthenticationController, router *gin.E
 		authRoutes.POST("/login", authController.Login)
 		authRoutes.POST("/register", authController.Register)
 		authRoutes.POST("/logout", authController.Logout)
+		authRoutes.POST("/refresh", authController.RefreshToken)
 	}
 }

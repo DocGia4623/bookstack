@@ -18,6 +18,7 @@ type UserService interface {
 	DeleteUser(id int) error
 	GetUserByEmail(email string) (*models.User, error)
 	GetUserIdByToken(token string) (int, error)
+	GetUserById(int) (*models.User, error)
 }
 
 type UserServiceImpl struct {
@@ -28,6 +29,10 @@ func NewUserServiceImpl(repo repository.UserRepository) UserService {
 	return &UserServiceImpl{
 		repo: repo,
 	}
+}
+
+func (s *UserServiceImpl) GetUserById(userId int) (*models.User, error) {
+	return s.repo.GetUserById(userId)
 }
 
 func (s *UserServiceImpl) GetUserIdByToken(token string) (int, error) {

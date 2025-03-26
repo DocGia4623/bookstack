@@ -10,7 +10,8 @@ import (
 )
 
 type BookRepository interface {
-	CreateBook(request.BookCreateRequest) (models.Book, error)
+	CreateBook(int, request.BookCreateRequest) (models.Book, error)
+	CreateShelve(int, request.ShelveCreateRequest) (models.Shelve, error)
 }
 
 type BookRepositoryImpl struct {
@@ -23,7 +24,31 @@ func NewBookRepositoryImpl(Db *gorm.DB) BookRepository {
 	}
 }
 
-func (b *BookRepositoryImpl) CreateBook(request request.BookCreateRequest) (models.Book, error) {
+func (b *BookRepositoryImpl) CreateShelve(userId int, request request.ShelveCreateRequest) (models.Shelve, error) {
+	var result models.Shelve
+	err := copier.Copy(&result, request)
+	if err != nil {
+		return models.Shelve{}, fmt.Errorf("cant bind request" + err.Error())
+	}
+
+	// Thêm danh sách Tags
+	for _, tag := range request.Tags {
+		result.Tags = append(result.Tags, models.Tag{
+			EntityID:   result.ID,
+			EntityType: "shelve",
+			Name:       tag,
+		})
+	}
+	result.CreatedBy = uint(userId)
+
+	// Lưu vào database
+	if err := b.DB.Create(&result).Error; err != nil {
+		return models.Shelve{}, err
+	}
+	return result, nil
+}
+
+func (b *BookRepositoryImpl) CreateBook(userId int, request request.BookCreateRequest) (models.Book, error) {
 	var result models.Book
 	// Chuyển request thành entity Book
 	err := copier.Copy(&result, request)
@@ -40,6 +65,7 @@ func (b *BookRepositoryImpl) CreateBook(request request.BookCreateRequest) (mode
 			Value:      tag.Value,
 		})
 	}
+	result.CreatedBy = uint(userId)
 
 	// Lưu vào database
 	if err := b.DB.Create(&result).Error; err != nil {

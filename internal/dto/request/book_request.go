@@ -14,3 +14,11 @@ type TagRequest struct {
 	Name  string `json:"name"`
 	Value string `json:"value"`
 }
+
+type ShelveCreateRequest struct {
+	Name        string   `json:"name" binding:"required"`       // Tên kệ (bắt buộc)
+	Description string   `json:"description"`                   // Mô tả kệ
+	Order       int      `json:"order"`                         // Thứ tự hiển thị của kệ
+	Tags        []string `json:"tags"`                          // Danh sách tag (chỉ lấy tên tag)
+	CreatedBy   uint     `json:"created_by" binding:"required"` // ID người tạo kệ (bắt buộc)
+}

@@ -7,7 +7,8 @@ import (
 )
 
 type BookService interface {
-	CreateBook(request.BookCreateRequest) (models.Book, error)
+	CreateBook(int, request.BookCreateRequest) (models.Book, error)
+	CreateShelve(int, request.ShelveCreateRequest) (models.Shelve, error)
 }
 
 type BookServiceImpl struct {
@@ -20,6 +21,10 @@ func NewBookServiceImpl(repository repository.BookRepository) BookService {
 	}
 }
 
-func (b *BookServiceImpl) CreateBook(request request.BookCreateRequest) (models.Book, error) {
-	return b.repo.CreateBook(request)
+func (b *BookServiceImpl) CreateShelve(userId int, request request.ShelveCreateRequest) (models.Shelve, error) {
+	return b.repo.CreateShelve(userId, request)
+}
+
+func (b *BookServiceImpl) CreateBook(userId int, request request.BookCreateRequest) (models.Book, error) {
+	return b.repo.CreateBook(userId, request)
 }

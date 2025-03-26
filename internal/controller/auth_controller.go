@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"bookstack/config"
 	"bookstack/internal/dto/request"
 	"bookstack/internal/dto/response"
 	"bookstack/internal/service"
@@ -112,6 +113,7 @@ func (controller *AuthenticationController) Login(c *gin.Context) {
 		Data: response.LoginResponse{
 			AccessToken:  accessToken,
 			RefreshToken: refreshToken,
+			TokenType:    "Bearer token",
 		},
 	}
 	c.JSON(http.StatusOK, webResponse)
@@ -148,4 +150,21 @@ func (controller *AuthenticationController) Logout(c *gin.Context) {
 		Data:    nil,
 	}
 	c.JSON(http.StatusOK, webResponse)
+}
+
+func (controller *AuthenticationController) RefreshToken(c *gin.Context) {
+	refreshToken, err := c.Cookie("refresh_token")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.WebResponse{Code: http.StatusUnauthorized, Status: "unauthorized", Message: "Refresh token is missing"})
+		return
+	}
+	log.Println("refresh Token: " + refreshToken)
+	config, _ := config.LoadConfig()
+	newAccessToken, newRefreshToken, err := controller.AuthenticationService.RefreshToken(refreshToken, config.RefreshTokenSecret)
+	c.SetCookie("refresh_token", newRefreshToken, 3600*24*7, "/", "", false, true)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.WebResponse{Code: http.StatusBadRequest, Status: "bad request", Message: err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, response.WebResponse{Code: http.StatusOK, Status: "ok", Message: "Refresh token success", Data: response.LoginResponse{TokenType: "Bearer Token", RefreshToken: newRefreshToken, AccessToken: newAccessToken}})
 }

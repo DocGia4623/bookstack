@@ -52,17 +52,16 @@ type Shelve struct {
 	Tags        []Tag     `gorm:"polymorphic:Entity;polymorphicValue:shelf" json:"tags"` // Tags liên kết với kệ
 	Comments    []Comment `gorm:"polymorphic:Entity;polymorphicValue:shelf" json:"comments"`
 	CreatedBy   uint      `json:"created_by"` // ID của người tạo kệ
-	UpdatedBy   uint      `json:"updated_by"` // ID của người cập nhật kệ
 }
 
 // Tag dùng để gắn nhãn mô tả, từ khóa cho các entity (Book, Chapter, Page,...)
 type Tag struct {
 	gorm.Model
-	EntityID   uint   `json:"entity_id"`   // ID của entity được gắn tag
-	EntityType string `json:"entity_type"` // Loại của entity (book, chapter, page, ...)
-	Name       string `json:"name"`        // Tên của tag
-	Value      string `json:"value"`       // Giá trị của tag
-	Order      int    `json:"order"`       // Thứ tự sắp xếp nếu cần
+	EntityID   uint   `json:"entity_id"`               // ID của entity được gắn tag
+	EntityType string `json:"entity_type"`             // Loại của entity (book, chapter, page, ...)
+	Name       string `gorm:"uniqueIndex" json:"name"` // Tên của tag
+	Value      string `json:"value"`                   // Giá trị của tag
+	Order      int    `json:"order"`                   // Thứ tự sắp xếp nếu cần
 }
 
 // Comment của sách và kệ sách
