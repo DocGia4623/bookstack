@@ -26,7 +26,7 @@ func NewOrderRepositoryImpl(db *gorm.DB) OrderRepository {
 
 func (o *OrderRepositoryImpl) GetBookPrice(bookId int) (float64, error) {
 	var book models.Book
-	err := o.DB.Where("id = ?").First(&book).Error
+	err := o.DB.Where("id = ?", bookId).First(&book).Error
 	if err != nil {
 		return 0, err
 	}

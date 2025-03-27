@@ -42,6 +42,8 @@ func ConnectDB(config *Config) *gorm.DB {
 		&models.RefreshToken{},
 		&models.Permission{},
 		&models.RolePermission{},
+		&models.Order{},
+		&models.OrderDetail{},
 	}
 	for _, model := range modelsToMigrate {
 		err := db.AutoMigrate(model)
