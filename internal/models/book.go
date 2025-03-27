@@ -1,12 +1,15 @@
 package models
 
 import (
+	"bookstack/internal/constant"
+
 	"gorm.io/gorm"
 )
 
 // Book đại diện cho cuốn sách
 type Book struct {
 	gorm.Model
+	Price       float64   `json:"price"`       // giá sách vật lý
 	Title       string    `json:"title"`       // Tiêu đề của sách
 	Description string    `json:"description"` // Mô tả của sách
 	Slug        string    `json:"slug"`        // Đường dẫn thân thiện
@@ -33,13 +36,21 @@ type Chapter struct {
 // Page đại diện cho trang trong một chương hoặc sách
 type Page struct {
 	gorm.Model
-	Title      string  `json:"title"`                    // Tiêu đề trang
-	Slug       string  `json:"slug"`                     // Đường dẫn thân thiện
-	Content    string  `json:"content" gorm:"type:text"` // Nội dung trang (có thể là markdown, HTML,...)
-	Order      int     `json:"order"`                    // Thứ tự sắp xếp trang trong chương
-	ChapterID  uint    `json:"chapter_id"`               // Khóa ngoại liên kết đến Chapter
-	Chapter    Chapter `gorm:"foreignKey:ChapterID"`
-	Restricted bool    `json:"restricted"` // Quyền truy cập trang
+	Title         string         `json:"title"`                    // Tiêu đề trang
+	Slug          string         `json:"slug"`                     // Đường dẫn thân thiện
+	Content       string         `json:"content" gorm:"type:text"` // Nội dung trang (có thể là markdown, HTML,...)
+	Order         int            `json:"order"`                    // Thứ tự sắp xếp trang trong chương
+	ChapterID     uint           `json:"chapter_id"`               // Khóa ngoại liên kết đến Chapter
+	Chapter       Chapter        `gorm:"foreignKey:ChapterID"`
+	Restricted    bool           `json:"restricted"` // Quyền truy cập trang
+	PageRevisions []PageRevision `gorm:"foreignKey:PageId"`
+}
+
+type PageRevision struct {
+	gorm.Model
+	PageId         int    `json:"page_id"`
+	Content        string `json:"content"`
+	RevisionNumber int    `json:"revision_number"`
 }
 
 // Shelf đại diện cho kệ chứa sách, dùng để phân loại sách theo chủ đề hoặc danh mục
@@ -74,4 +85,24 @@ type Comment struct {
 	Text       string `json:"text"`
 	CreatedBy  int    `json:"created_by"`
 	ParentID   int    `json:"parent_id"`
+}
+
+// Order - Đơn hàng
+type Order struct {
+	gorm.Model
+	UserID      uint                 `json:"user_id"`       // Người đặt hàng
+	TotalPrice  float64              `json:"total_price"`   // Tổng giá trị đơn hàng
+	Status      constant.OrderStatus `json:"status"`        // Trạng thái đơn hàng: pending, completed, cancelled
+	OrderDetail []OrderDetail        `json:"order_details"` // Danh sách sách trong đơn
+}
+
+// OrderDetail - Chi tiết đơn hàng
+type OrderDetail struct {
+	gorm.Model
+	OrderID  uint    `json:"order_id"`
+	Order    Order   `gorm:"foreignKey:OrderID"`
+	BookID   uint    `json:"book_id"`
+	Book     Book    `gorm:"foreignKey:BookID"`
+	Quantity int     `json:"quantity"` // Số lượng sách đặt
+	Price    float64 `json:"price"`    // Giá sách tại thời điểm đặt hàng
 }

@@ -30,7 +30,12 @@ func NewBookRepositoryImpl(Db *gorm.DB) BookRepository {
 }
 
 func (b *BookRepositoryImpl) GetPageChapter(chapterId int) ([]models.Page, error) {
-	return nil, nil
+	var pages []models.Page
+	err := b.DB.Where("chapter_id = ?", chapterId).Find(&pages).Error
+	if err != nil {
+		return nil, err
+	}
+	return pages, nil
 }
 
 func (b *BookRepositoryImpl) AddPage(request request.PageRequest) (models.Page, error) {

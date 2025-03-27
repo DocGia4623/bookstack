@@ -3,6 +3,7 @@ package controller
 import (
 	"bookstack/internal/dto/request"
 	"bookstack/internal/dto/response"
+	"bookstack/internal/models"
 	"bookstack/internal/service"
 	"net/http"
 	"strconv"
@@ -303,6 +304,55 @@ func (controller *BookController) AddPage(c *gin.Context) {
 		Status:  "success",
 		Message: "Page created",
 		Data:    page,
+	}
+	c.JSON(http.StatusOK, webResponse)
+}
+
+func (controller *BookController) GetPages(c *gin.Context) {
+	var webResponse response.WebResponse
+	var pages []models.Page
+	// Lấy bookID từ form-data
+	ChapterIdstr := c.PostForm("pageId") // Hoặc c.DefaultPostForm("bookId", "0")
+	if ChapterIdstr == "" {
+		webResponse = response.WebResponse{
+			Code:    http.StatusBadRequest,
+			Status:  "error",
+			Message: "missing ChapterId in form-data",
+			Data:    nil,
+		}
+		c.JSON(http.StatusBadRequest, webResponse)
+		return
+	}
+
+	ChapterId, err := strconv.Atoi(ChapterIdstr)
+	if err != nil {
+		webResponse = response.WebResponse{
+			Code:    http.StatusBadRequest,
+			Status:  "error",
+			Message: "Chapterid must be integer",
+			Data:    nil,
+		}
+		c.JSON(http.StatusBadRequest, webResponse)
+		return
+	}
+
+	pages, err = controller.bookSerivce.GetPageChapter(ChapterId)
+	if err != nil {
+		webResponse = response.WebResponse{
+			Code:    http.StatusInternalServerError,
+			Status:  "error",
+			Message: "Error from server",
+			Data:    nil,
+		}
+		c.JSON(http.StatusInternalServerError, webResponse)
+		return
+	}
+	// Trả về danh sách chương
+	webResponse = response.WebResponse{
+		Code:    http.StatusOK,
+		Status:  "success",
+		Message: "Pages",
+		Data:    pages,
 	}
 	c.JSON(http.StatusOK, webResponse)
 }

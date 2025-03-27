@@ -32,12 +32,16 @@ func InitializeApp() (*App, error) {
 	bookRepository := repository.NewBookRepositoryImpl(db)
 	bookService := service.NewBookServiceImpl(bookRepository)
 	bookController := controller.NewBookController(bookService, userService)
+	orderRepository := repository.NewOrderRepositoryImpl(db)
+	orderService := service.NewOrderServiceImpl(orderRepository)
+	orderController := controller.NewOrderController(orderService)
 	permissionRepository := repository.NewPermissionRepositoryImpl(db)
 	middlewareMiddleware := middleware.NewAuthorizeMiddleware(userRepository, permissionRepository, configConfig)
 	app := &App{
 		AuthenticationController: authenticationController,
 		UserController:           userController,
 		BookController:           bookController,
+		OrderController:          orderController,
 		Middleware:               middlewareMiddleware,
 	}
 	return app, nil
@@ -55,5 +59,6 @@ type App struct {
 	AuthenticationController *controller.AuthenticationController
 	UserController           *controller.UserController
 	BookController           *controller.BookController
+	OrderController          *controller.OrderController
 	Middleware               *middleware.Middleware
 }

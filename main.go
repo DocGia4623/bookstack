@@ -31,5 +31,6 @@ func main() {
 	routes.AuthRoute(*app.AuthenticationController, router)
 	routes.UserRoute(*app.UserController, app.Middleware, router)
 	routes.BookRoute(*app.BookController, router)
+	routes.OrderRoute(*app.OrderController, router)
 	router.Run(":8080")
 }

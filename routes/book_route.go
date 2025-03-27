@@ -15,5 +15,6 @@ func BookRoute(bookController controller.BookController, router *gin.Engine) {
 		BookRoutes.POST("/createchapter", bookController.CreateChapter)
 		BookRoutes.POST("/getchapter", bookController.GetChapters)
 		BookRoutes.POST("/addpage", bookController.AddPage)
+		BookRoutes.POST("/getpage", bookController.GetPages)
 	}
 }

@@ -13,6 +13,7 @@ type BookService interface {
 	CreateChapter(request.BookChapterRequest) (models.Chapter, error)
 	GetChaptersOfBook(int) ([]models.Chapter, error)
 	AddPage(request.PageRequest) (models.Page, error)
+	GetPageChapter(int) ([]models.Page, error)
 }
 
 type BookServiceImpl struct {
@@ -25,6 +26,9 @@ func NewBookServiceImpl(repository repository.BookRepository) BookService {
 	}
 }
 
+func (b *BookServiceImpl) GetPageChapter(chapterId int) ([]models.Page, error) {
+	return b.repo.GetPageChapter(chapterId)
+}
 func (b *BookServiceImpl) AddPage(request request.PageRequest) (models.Page, error) {
 	return b.repo.AddPage(request)
 }

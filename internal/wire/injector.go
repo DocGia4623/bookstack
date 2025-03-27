@@ -25,6 +25,7 @@ type App struct {
 	AuthenticationController *controller.AuthenticationController
 	UserController           *controller.UserController
 	BookController           *controller.BookController
+	OrderController          *controller.OrderController
 	Middleware               *middleware.Middleware
 }
 
