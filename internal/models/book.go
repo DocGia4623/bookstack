@@ -45,23 +45,23 @@ type Page struct {
 // Shelf đại diện cho kệ chứa sách, dùng để phân loại sách theo chủ đề hoặc danh mục
 type Shelve struct {
 	gorm.Model
-	Name        string    `json:"name"`                                                  // Tên kệ
-	Description string    `json:"description"`                                           // Mô tả kệ
-	Order       int       `json:"order"`                                                 // Thứ tự hiển thị của kệ
-	Books       []Book    `json:"books"`                                                 // Danh sách sách trong kệ
-	Tags        []Tag     `gorm:"polymorphic:Entity;polymorphicValue:shelf" json:"tags"` // Tags liên kết với kệ
-	Comments    []Comment `gorm:"polymorphic:Entity;polymorphicValue:shelf" json:"comments"`
+	Name        string    `json:"name"`                                                   // Tên kệ
+	Description string    `json:"description"`                                            // Mô tả kệ
+	Order       int       `json:"order"`                                                  // Thứ tự hiển thị của kệ
+	Books       []Book    `json:"books"`                                                  // Danh sách sách trong kệ
+	Tags        []Tag     `gorm:"polymorphic:Entity;polymorphicValue:shelve" json:"tags"` // Tags liên kết với kệ
+	Comments    []Comment `gorm:"polymorphic:Entity;polymorphicValue:shelve" json:"comments"`
 	CreatedBy   uint      `json:"created_by"` // ID của người tạo kệ
 }
 
 // Tag dùng để gắn nhãn mô tả, từ khóa cho các entity (Book, Chapter, Page,...)
 type Tag struct {
 	gorm.Model
-	EntityID   uint   `json:"entity_id"`               // ID của entity được gắn tag
-	EntityType string `json:"entity_type"`             // Loại của entity (book, chapter, page, ...)
-	Name       string `gorm:"uniqueIndex" json:"name"` // Tên của tag
-	Value      string `json:"value"`                   // Giá trị của tag
-	Order      int    `json:"order"`                   // Thứ tự sắp xếp nếu cần
+	EntityID   uint   `json:"entity_id"`   // ID của entity được gắn tag
+	EntityType string `json:"entity_type"` // Loại của entity (book, chapter, page, ...)
+	Name       string `json:"name"`        // Tên của tag
+	Value      string `json:"value"`       // Giá trị của tag
+	Order      int    `json:"order"`       // Thứ tự sắp xếp nếu cần
 }
 
 // Comment của sách và kệ sách

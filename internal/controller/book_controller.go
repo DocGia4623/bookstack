@@ -5,6 +5,7 @@ import (
 	"bookstack/internal/dto/response"
 	"bookstack/internal/service"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/copier"
@@ -152,4 +153,156 @@ func (controller *BookController) CreateBook(c *gin.Context) {
 		Data:    bookReponse,
 	}
 	c.JSON(http.StatusCreated, webResponse)
+}
+
+func (controller *BookController) GetBooks(c *gin.Context) {
+	var webResponse response.WebResponse
+	books, err := controller.bookSerivce.GetAllBook()
+	if err != nil {
+		webResponse = response.WebResponse{
+			Code:    http.StatusInternalServerError,
+			Status:  "error",
+			Message: "error during get book" + err.Error(),
+			Data:    nil,
+		}
+		c.JSON(http.StatusBadRequest, webResponse)
+		return
+	}
+	var booksResponse []response.BookResponse
+	// Copy dữ liệu từng cuốn sách vào response
+	for _, book := range books {
+		var bookResponse response.BookResponse
+		copier.Copy(&bookResponse, &book)
+		booksResponse = append(booksResponse, bookResponse)
+	}
+	// Phản hồi thành công
+	webResponse = response.WebResponse{
+		Code:    http.StatusCreated,
+		Status:  "success",
+		Message: "Books",
+		Data:    booksResponse,
+	}
+	c.JSON(http.StatusCreated, webResponse)
+}
+
+func (controller *BookController) CreateChapter(c *gin.Context) {
+	var webResponse response.WebResponse
+	var request request.BookChapterRequest
+	if err := c.ShouldBindJSON(&request); err != nil {
+		webResponse = response.WebResponse{
+			Code:    http.StatusBadRequest,
+			Status:  "error",
+			Message: "invalid request",
+			Data:    nil,
+		}
+		c.JSON(http.StatusBadRequest, webResponse)
+		return
+	}
+	chapter, err := controller.bookSerivce.CreateChapter(request)
+	if err != nil {
+		webResponse = response.WebResponse{
+			Code:    http.StatusInternalServerError,
+			Status:  "error",
+			Message: "Cant create" + err.Error(),
+			Data:    nil,
+		}
+		c.JSON(http.StatusInternalServerError, webResponse)
+		return
+	}
+	// Phản hồi thành công
+	webResponse = response.WebResponse{
+		Code:    http.StatusCreated,
+		Status:  "success",
+		Message: "Created chapter",
+		Data:    chapter,
+	}
+	c.JSON(http.StatusCreated, webResponse)
+}
+
+func (controller *BookController) GetChapters(c *gin.Context) {
+	var webResponse response.WebResponse
+
+	// Lấy bookID từ form-data
+	bookIDStr := c.PostForm("bookId") // Hoặc c.DefaultPostForm("bookId", "0")
+	if bookIDStr == "" {
+		webResponse = response.WebResponse{
+			Code:    http.StatusBadRequest,
+			Status:  "error",
+			Message: "missing bookId in form-data",
+			Data:    nil,
+		}
+		c.JSON(http.StatusBadRequest, webResponse)
+		return
+	}
+
+	// Chuyển bookID từ string -> int
+	bookID, err := strconv.Atoi(bookIDStr)
+	if err != nil {
+		webResponse = response.WebResponse{
+			Code:    http.StatusBadRequest,
+			Status:  "error",
+			Message: "invalid bookId",
+			Data:    nil,
+		}
+		c.JSON(http.StatusBadRequest, webResponse)
+		return
+	}
+
+	// Gọi service để lấy chapters của book
+	chapters, err := controller.bookSerivce.GetChaptersOfBook(bookID)
+	if err != nil {
+		webResponse = response.WebResponse{
+			Code:    http.StatusInternalServerError,
+			Status:  "error",
+			Message: "error getting chapters: " + err.Error(),
+			Data:    nil,
+		}
+		c.JSON(http.StatusInternalServerError, webResponse)
+		return
+	}
+
+	// Trả về danh sách chương
+	webResponse = response.WebResponse{
+		Code:    http.StatusOK,
+		Status:  "success",
+		Message: "Chapters retrieved successfully",
+		Data:    chapters,
+	}
+	c.JSON(http.StatusOK, webResponse)
+}
+
+func (controller *BookController) AddPage(c *gin.Context) {
+	var webResponse response.WebResponse
+	var request request.PageRequest
+
+	if err := c.ShouldBindJSON(&request); err != nil {
+		webResponse = response.WebResponse{
+			Code:    http.StatusBadRequest,
+			Status:  "error",
+			Message: "request invalid",
+			Data:    nil,
+		}
+		c.JSON(http.StatusBadRequest, webResponse)
+		return
+	}
+
+	page, err := controller.bookSerivce.AddPage(request)
+	if err != nil {
+		webResponse = response.WebResponse{
+			Code:    http.StatusInternalServerError,
+			Status:  "error",
+			Message: "Cant add page",
+			Data:    nil,
+		}
+		c.JSON(http.StatusInternalServerError, webResponse)
+		return
+	}
+	// Trả về danh sách chương
+	webResponse = response.WebResponse{
+		Code:    http.StatusOK,
+		Status:  "success",
+		Message: "Page created",
+		Data:    page,
+	}
+	c.JSON(http.StatusOK, webResponse)
 }
