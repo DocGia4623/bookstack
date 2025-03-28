@@ -1,5 +1,11 @@
 package request
 
+type CompleteBookCreateRequest struct {
+	BookCreateRequest  BookCreateRequest    `json:"book"`
+	BookChapterRequest []BookChapterRequest `json:"chapters"`
+	PageRequest        []PageRequest        `json:"pages"`
+}
+
 type BookCreateRequest struct {
 	Title       string       `json:"title" binding:"required"`     // Tiêu đề của sách (bắt buộc)
 	Description string       `json:"description"`                  // Mô tả của sách
@@ -24,15 +30,17 @@ type ShelveCreateRequest struct {
 }
 
 type BookChapterRequest struct {
-	Title  string `json:"title"`   // Tiêu đề chương
-	Order  int    `json:"order"`   // Thứ tự sắp xếp chương
-	BookID uint   `json:"book_id"` // Khóa ngoại liên kết đến Book
+	Title string `json:"title"` // Tiêu đề chương
+	Order int    `json:"order"` // Thứ tự sắp xếp chương
 }
 
 type PageRequest struct {
-	Title     string `json:"title" binding:"required"`      // Tiêu đề trang (bắt buộc)
-	Slug      string `json:"slug"`                          // Đường dẫn thân thiện (có thể tự động tạo nếu rỗng)
-	Content   string `json:"content"`                       // Nội dung trang (markdown, HTML,...)
-	Order     int    `json:"order"`                         // Thứ tự sắp xếp trang
-	ChapterID uint   `json:"chapter_id" binding:"required"` // ID chương chứa trang (bắt buộc)
+	Title     string `json:"title" binding:"required"` // Tiêu đề trang (bắt buộc)
+	Slug      string `json:"slug"`                     // Đường dẫn thân thiện (có thể tự động tạo nếu rỗng)
+	Content   string `json:"content"`                  // Nội dung trang (markdown, HTML,...)
+	Order     int    `json:"order"`                    // Thứ tự sắp xếp trang
+	ChapterId int    `json:"chapter_id"`
+}
+
+type CommentRequest struct {
 }

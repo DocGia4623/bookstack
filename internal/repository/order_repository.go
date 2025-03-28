@@ -11,6 +11,7 @@ import (
 
 type OrderRepository interface {
 	CreateOrder(request.OrderRequest) (models.Order, error)
+	GetOrder(int) ([]models.Order, error)
 	CancelOrder(int) error
 }
 
@@ -22,6 +23,16 @@ func NewOrderRepositoryImpl(db *gorm.DB) OrderRepository {
 	return &OrderRepositoryImpl{
 		DB: db,
 	}
+}
+
+func (o *OrderRepositoryImpl) GetOrder(userId int) ([]models.Order, error) {
+	var orders []models.Order
+
+	err := o.DB.Where("user_id = ?", userId).Find(&orders).Error
+	if err != nil {
+		return nil, err
+	}
+	return orders, err
 }
 
 func (o *OrderRepositoryImpl) GetBookPrice(bookId int) (float64, error) {

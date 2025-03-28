@@ -15,7 +15,7 @@ type Book struct {
 	Slug        string    `json:"slug"`        // Đường dẫn thân thiện
 	ShelveID    uint      `json:"shelve_id"`   // Khóa ngoại liên kết đến Shelf
 	Shelve      Shelve    `gorm:"foreignKey:ShelveID"`
-	Chapters    []Chapter `json:"chapters"`                                             // Danh sách chương của sách
+	Chapters    []Chapter `gorm:"foreignKey:BookID" json:"chapters"`                    // Danh sách chương của sách
 	Tags        []Tag     `gorm:"polymorphic:Entity;polymorphicValue:book" json:"tags"` // Tags liên kết với sách
 	Comments    []Comment `gorm:"polymorphic:Entity;polymorphicValue:book" json:"comments"`
 	Restricted  bool      `json:"restricted"` // Trường kiểm soát quyền truy cập
@@ -80,7 +80,7 @@ type Tag struct {
 type Comment struct {
 	gorm.Model
 	EntityID   uint   `json:"entity_id"`   // ID của entity (Book hoặc Shelve)
-	EntityType string `json:"entity_type"` // Loại entity (book, shelf)
+	EntityType string `json:"entity_type"` // Loại entity (book, shelve)
 	Rating     int    `json:"rating"`
 	Text       string `json:"text"`
 	CreatedBy  int    `json:"created_by"`

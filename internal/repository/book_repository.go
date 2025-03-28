@@ -10,12 +10,13 @@ import (
 )
 
 type BookRepository interface {
+	CreateCompleteBook(int, request.CompleteBookCreateRequest) (models.Book, error)
 	CreateBook(int, request.BookCreateRequest) (models.Book, error)
 	GetAllBook() ([]models.Book, error)
 	CreateShelve(int, request.ShelveCreateRequest) (models.Shelve, error)
-	CreateChapter(request.BookChapterRequest) (models.Chapter, error)
+	CreateChapter(uint, request.BookChapterRequest) (models.Chapter, error)
 	GetChaptersOfBook(int) ([]models.Chapter, error)
-	AddPage(request.PageRequest) (models.Page, error)
+	AddPage(uint, request.PageRequest) (models.Page, error)
 	GetPageChapter(int) ([]models.Page, error)
 }
 
@@ -29,6 +30,52 @@ func NewBookRepositoryImpl(Db *gorm.DB) BookRepository {
 	}
 }
 
+func (b *BookRepositoryImpl) CreateCompleteBook(userId int, req request.CompleteBookCreateRequest) (models.Book, error) {
+	// Tạo sách
+	book, err := b.CreateBook(userId, req.BookCreateRequest)
+	if err != nil {
+		return models.Book{}, fmt.Errorf("failed to create book: %w", err)
+	}
+
+	// Tạo danh sách chương cho sách
+	var chapters []models.Chapter
+	for _, chapterReq := range req.BookChapterRequest {
+		chapter, err := b.CreateChapter(book.ID, chapterReq)
+		if err != nil {
+			return models.Book{}, fmt.Errorf("failed to create chapter: %w", err)
+		}
+		chapters = append(chapters, chapter)
+	}
+
+	// tạo trang
+	for _, pageReq := range req.PageRequest {
+		_, err := b.CreatePage(pageReq)
+		if err != nil {
+			return models.Book{}, fmt.Errorf("cant create page: %w", err)
+		}
+	}
+
+	// Load lại sách với các chương đã thêm vào
+	book.Chapters = chapters
+	return book, nil
+}
+
+func (b *BookRepositoryImpl) CreatePage(request request.PageRequest) (models.Page, error) {
+	var page models.Page
+	err := copier.Copy(&page, request)
+	if err != nil {
+		return models.Page{}, nil
+	}
+	err = b.DB.FirstOrCreate(&page, models.Page{
+		Title:     request.Title,
+		ChapterID: uint(request.ChapterId),
+	}).Error
+	if err != nil {
+		return models.Page{}, err
+	}
+	return page, err
+}
+
 func (b *BookRepositoryImpl) GetPageChapter(chapterId int) ([]models.Page, error) {
 	var pages []models.Page
 	err := b.DB.Where("chapter_id = ?", chapterId).Find(&pages).Error
@@ -38,15 +85,16 @@ func (b *BookRepositoryImpl) GetPageChapter(chapterId int) ([]models.Page, error
 	return pages, nil
 }
 
-func (b *BookRepositoryImpl) AddPage(request request.PageRequest) (models.Page, error) {
+func (b *BookRepositoryImpl) AddPage(chapterId uint, request request.PageRequest) (models.Page, error) {
 	var page models.Page
 	err := copier.Copy(&page, request)
 	if err != nil {
 		return models.Page{}, nil
 	}
+	page.ChapterID = chapterId
 	err = b.DB.FirstOrCreate(&page, models.Page{
 		Title:     request.Title,
-		ChapterID: request.ChapterID,
+		ChapterID: chapterId,
 	}).Error
 	if err != nil {
 		return models.Page{}, err
@@ -62,16 +110,17 @@ func (b *BookRepositoryImpl) GetChaptersOfBook(bookID int) ([]models.Chapter, er
 	}
 	return chapters, nil
 }
-func (b *BookRepositoryImpl) CreateChapter(request request.BookChapterRequest) (models.Chapter, error) {
+func (b *BookRepositoryImpl) CreateChapter(bookId uint, request request.BookChapterRequest) (models.Chapter, error) {
 	var chapter models.Chapter
 	err := copier.Copy(&chapter, request)
 	if err != nil {
 		return models.Chapter{}, err
 	}
+	chapter.BookID = bookId
 	// Dùng FirstOrCreate để tìm hoặc tạo mới Chapter
 	result := b.DB.FirstOrCreate(&chapter, models.Chapter{
 		Title:  request.Title,
-		BookID: request.BookID, // Điều kiện để xác định chương có tồn tại hay chưa
+		BookID: bookId, // Điều kiện để xác định chương có tồn tại hay chưa
 	})
 	if result.Error != nil {
 		return models.Chapter{}, result.Error
@@ -81,7 +130,7 @@ func (b *BookRepositoryImpl) CreateChapter(request request.BookChapterRequest) (
 }
 func (b *BookRepositoryImpl) GetAllBook() ([]models.Book, error) {
 	var books []models.Book
-	err := b.DB.Find(&books).Error
+	err := b.DB.Preload("Chapters").Preload("Tags").Find(&books).Error
 	if err != nil {
 		return []models.Book{}, err
 	}

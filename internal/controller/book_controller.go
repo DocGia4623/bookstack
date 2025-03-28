@@ -187,6 +187,13 @@ func (controller *BookController) GetBooks(c *gin.Context) {
 }
 
 func (controller *BookController) CreateChapter(c *gin.Context) {
+	bookIdStr := c.Param("bookId")                        // Lấy bookId từ URL
+	bookId64, err := strconv.ParseUint(bookIdStr, 10, 32) // Chuyển thành uint64
+	if err != nil {
+		c.JSON(400, gin.H{"error": "Invalid bookId"})
+		return
+	}
+	bookId := uint(bookId64) // Ép kiểu thành uint
 	var webResponse response.WebResponse
 	var request request.BookChapterRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
@@ -199,7 +206,7 @@ func (controller *BookController) CreateChapter(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, webResponse)
 		return
 	}
-	chapter, err := controller.bookSerivce.CreateChapter(request)
+	chapter, err := controller.bookSerivce.CreateChapter(bookId, request)
 	if err != nil {
 		webResponse = response.WebResponse{
 			Code:    http.StatusInternalServerError,
@@ -222,27 +229,13 @@ func (controller *BookController) CreateChapter(c *gin.Context) {
 
 func (controller *BookController) GetChapters(c *gin.Context) {
 	var webResponse response.WebResponse
-
-	// Lấy bookID từ form-data
-	bookIDStr := c.PostForm("bookId") // Hoặc c.DefaultPostForm("bookId", "0")
-	if bookIDStr == "" {
-		webResponse = response.WebResponse{
-			Code:    http.StatusBadRequest,
-			Status:  "error",
-			Message: "missing bookId in form-data",
-			Data:    nil,
-		}
-		c.JSON(http.StatusBadRequest, webResponse)
-		return
-	}
-
-	// Chuyển bookID từ string -> int
-	bookID, err := strconv.Atoi(bookIDStr)
+	bookIdStr := c.Param("bookId") // Lấy bookId từ URL
+	bookId, err := strconv.Atoi(bookIdStr)
 	if err != nil {
 		webResponse = response.WebResponse{
 			Code:    http.StatusBadRequest,
 			Status:  "error",
-			Message: "invalid bookId",
+			Message: "cant get bookId" + err.Error(),
 			Data:    nil,
 		}
 		c.JSON(http.StatusBadRequest, webResponse)
@@ -250,7 +243,7 @@ func (controller *BookController) GetChapters(c *gin.Context) {
 	}
 
 	// Gọi service để lấy chapters của book
-	chapters, err := controller.bookSerivce.GetChaptersOfBook(bookID)
+	chapters, err := controller.bookSerivce.GetChaptersOfBook(bookId)
 	if err != nil {
 		webResponse = response.WebResponse{
 			Code:    http.StatusInternalServerError,
@@ -286,8 +279,15 @@ func (controller *BookController) AddPage(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, webResponse)
 		return
 	}
+	chapterIdStr := c.Param("chapterId")                        // Lấy bookId từ URL
+	chapterId64, err := strconv.ParseUint(chapterIdStr, 10, 32) // Chuyển thành uint64
+	if err != nil {
+		c.JSON(400, gin.H{"error": "Invalid bookId"})
+		return
+	}
+	chapterId := uint(chapterId64) // Ép kiểu thành uint
 
-	page, err := controller.bookSerivce.AddPage(request)
+	page, err := controller.bookSerivce.AddPage(chapterId, request)
 	if err != nil {
 		webResponse = response.WebResponse{
 			Code:    http.StatusInternalServerError,
@@ -311,20 +311,9 @@ func (controller *BookController) AddPage(c *gin.Context) {
 func (controller *BookController) GetPages(c *gin.Context) {
 	var webResponse response.WebResponse
 	var pages []models.Page
-	// Lấy bookID từ form-data
-	ChapterIdstr := c.PostForm("pageId") // Hoặc c.DefaultPostForm("bookId", "0")
-	if ChapterIdstr == "" {
-		webResponse = response.WebResponse{
-			Code:    http.StatusBadRequest,
-			Status:  "error",
-			Message: "missing ChapterId in form-data",
-			Data:    nil,
-		}
-		c.JSON(http.StatusBadRequest, webResponse)
-		return
-	}
+	chapterIdStr := c.Param("chapterId")
 
-	ChapterId, err := strconv.Atoi(ChapterIdstr)
+	ChapterId, err := strconv.Atoi(chapterIdStr)
 	if err != nil {
 		webResponse = response.WebResponse{
 			Code:    http.StatusBadRequest,
@@ -347,12 +336,69 @@ func (controller *BookController) GetPages(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, webResponse)
 		return
 	}
-	// Trả về danh sách chương
+	// Trả về danh sách Trang
 	webResponse = response.WebResponse{
 		Code:    http.StatusOK,
 		Status:  "success",
 		Message: "Pages",
 		Data:    pages,
+	}
+	c.JSON(http.StatusOK, webResponse)
+}
+
+func (controller *BookController) CreateCompleteBook(c *gin.Context) {
+	var webResponse response.WebResponse
+	var request request.CompleteBookCreateRequest
+
+	header := c.Request.Header.Get("Authorization")
+	userId, err := controller.userService.GetUserIdByToken(header)
+	if err != nil {
+		webResponse = response.WebResponse{
+			Code:    http.StatusBadRequest,
+			Status:  "error",
+			Message: "no token found",
+			Data:    nil,
+		}
+		c.JSON(http.StatusBadRequest, webResponse)
+		return
+	}
+	user, err := controller.userService.GetUserById(userId)
+	if err != nil {
+		webResponse = response.WebResponse{
+			Code:    http.StatusBadRequest,
+			Status:  "error",
+			Message: "cant find user",
+			Data:    nil,
+		}
+		c.JSON(http.StatusBadRequest, webResponse)
+		return
+	}
+	if err := c.ShouldBindJSON(&request); err != nil {
+		webResponse = response.WebResponse{
+			Code:    http.StatusBadRequest,
+			Status:  "error",
+			Message: "Invalid request",
+			Data:    nil,
+		}
+		c.JSON(http.StatusBadRequest, webResponse)
+		return
+	}
+	book, err := controller.bookSerivce.CreateCompleteBook(user.ID, request)
+	if err != nil {
+		webResponse = response.WebResponse{
+			Code:    http.StatusInternalServerError,
+			Status:  "error",
+			Message: "Server error",
+			Data:    nil,
+		}
+		c.JSON(http.StatusInternalServerError, webResponse)
+		return
+	}
+	webResponse = response.WebResponse{
+		Code:    http.StatusOK,
+		Status:  "success",
+		Message: "Pages",
+		Data:    book,
 	}
 	c.JSON(http.StatusOK, webResponse)
 }

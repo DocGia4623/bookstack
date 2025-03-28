@@ -6,7 +6,7 @@ type BookResponse struct {
 	Slug        string   `json:"slug"`                         // Đường dẫn thân thiện
 	ShelveID    uint     `json:"shelve_id" binding:"required"` // ID của kệ sách chứa nó (bắt buộc)
 	Restricted  bool     `json:"restricted"`                   // Trạng thái kiểm soát quyền truy cập
-	CreatedBy   string   `json:"created_by"`                   // ID của người tạo sách
+	CreatedBy   string   `json:"created_by"`                   // Name của người tạo sách
 	Tags        []string `json:"tags"`
 	Shelve      string   `json:"shelve"`
 }
