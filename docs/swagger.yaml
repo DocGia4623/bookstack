@@ -1,0 +1,601 @@
+basePath: /
+definitions:
+  request.BookChapterRequest:
+    properties:
+      order:
+        description: Thứ tự sắp xếp chương
+        type: integer
+      title:
+        description: Tiêu đề chương
+        type: string
+    type: object
+  request.BookCreateRequest:
+    properties:
+      created_by:
+        description: ID của người tạo sách
+        type: integer
+      description:
+        description: Mô tả của sách
+        type: string
+      price:
+        type: number
+      restricted:
+        description: Trạng thái kiểm soát quyền truy cập
+        type: boolean
+      shelve_id:
+        description: ID của kệ sách chứa nó (bắt buộc)
+        type: integer
+      slug:
+        description: Đường dẫn thân thiện
+        type: string
+      tags:
+        description: Danh sách tag
+        items:
+          $ref: '#/definitions/request.TagRequest'
+        type: array
+      title:
+        description: Tiêu đề của sách (bắt buộc)
+        type: string
+    required:
+    - shelve_id
+    - title
+    type: object
+  request.CompleteBookCreateRequest:
+    properties:
+      book:
+        $ref: '#/definitions/request.BookCreateRequest'
+      chapters:
+        items:
+          $ref: '#/definitions/request.BookChapterRequest'
+        type: array
+      pages:
+        items:
+          $ref: '#/definitions/request.PageRequest'
+        type: array
+    type: object
+  request.OrderDetailRequest:
+    properties:
+      book_id:
+        description: ID của sách
+        type: integer
+      quantity:
+        description: Số lượng sách đặt
+        type: integer
+    required:
+    - book_id
+    - quantity
+    type: object
+  request.OrderRequest:
+    properties:
+      order_details:
+        description: Danh sách sách trong đơn
+        items:
+          $ref: '#/definitions/request.OrderDetailRequest'
+        type: array
+      user_id:
+        description: Người đặt hàng
+        type: integer
+    required:
+    - order_details
+    - user_id
+    type: object
+  request.PageRequest:
+    properties:
+      chapter_id:
+        type: integer
+      content:
+        description: Nội dung trang (markdown, HTML,...)
+        type: string
+      order:
+        description: Thứ tự sắp xếp trang
+        type: integer
+      slug:
+        description: Đường dẫn thân thiện (có thể tự động tạo nếu rỗng)
+        type: string
+      title:
+        description: Tiêu đề trang (bắt buộc)
+        type: string
+    required:
+    - title
+    type: object
+  request.ShelveCreateRequest:
+    properties:
+      created_by:
+        description: ID người tạo kệ (bắt buộc)
+        type: integer
+      description:
+        description: Mô tả kệ
+        type: string
+      name:
+        description: Tên kệ (bắt buộc)
+        type: string
+      order:
+        description: Thứ tự hiển thị của kệ
+        type: integer
+      tags:
+        description: Danh sách tag (chỉ lấy tên tag)
+        items:
+          type: string
+        type: array
+    required:
+    - created_by
+    - name
+    type: object
+  request.TagRequest:
+    properties:
+      name:
+        type: string
+      value:
+        type: string
+    type: object
+  request.UserCreateRequest:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+    type: object
+  request.UserLoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  request.UserUpdateRequest:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+    type: object
+  response.WebResponse:
+    properties:
+      code:
+        type: integer
+      data: {}
+      message:
+        type: string
+      status:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: This is a book ordering API built with Golang and Gin framework.
+  title: BookStack API
+  version: "1.0"
+paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Logs in a user and returns access & refresh tokens
+      parameters:
+      - description: Login credentials
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.UserLoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.WebResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.WebResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.WebResponse'
+      summary: User login
+      tags:
+      - Authentication
+  /auth/logout:
+    post:
+      consumes:
+      - application/json
+      description: Logs out a user by invalidating their token
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.WebResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.WebResponse'
+      summary: User logout
+      tags:
+      - Authentication
+  /auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Generates a new access token using a refresh token
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.WebResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.WebResponse'
+      summary: Refresh access token
+      tags:
+      - Authentication
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new user account
+      parameters:
+      - description: User registration data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.UserCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.WebResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.WebResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.WebResponse'
+      summary: Register a new user
+      tags:
+      - Authentication
+  /books:
+    get:
+      description: Retrieve all books available in the system
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.WebResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.WebResponse'
+      summary: Get all books
+      tags:
+      - Book
+    post:
+      consumes:
+      - application/json
+      description: Create a new book associated with a user
+      parameters:
+      - description: Authorization token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Book request body
+        in: body
+        name: book
+        required: true
+        schema:
+          $ref: '#/definitions/request.BookCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/response.WebResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.WebResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.WebResponse'
+      summary: Create a new book
+      tags:
+      - Book
+  /books/{bookId}/chapters:
+    get:
+      description: Retrieve all chapters associated with a book
+      parameters:
+      - description: Book ID
+        in: path
+        name: bookId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.WebResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.WebResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.WebResponse'
+      summary: Get all chapters of a book
+      tags:
+      - Chapter
+    post:
+      consumes:
+      - application/json
+      description: Add a new chapter to an existing book
+      parameters:
+      - description: Book ID
+        in: path
+        name: bookId
+        required: true
+        type: integer
+      - description: Chapter request body
+        in: body
+        name: chapter
+        required: true
+        schema:
+          $ref: '#/definitions/request.BookChapterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/response.WebResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.WebResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.WebResponse'
+      summary: Create a chapter for a book
+      tags:
+      - Chapter
+  /books/complete:
+    post:
+      consumes:
+      - application/json
+      description: Create a fully detailed book with associated chapters and pages
+      parameters:
+      - description: Authorization token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Complete book request body
+        in: body
+        name: book
+        required: true
+        schema:
+          $ref: '#/definitions/request.CompleteBookCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/response.WebResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.WebResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.WebResponse'
+      summary: Create a complete book with chapters and pages
+      tags:
+      - Book
+  /chapters/{chapterId}/pages:
+    get:
+      description: Retrieve all pages within a chapter
+      parameters:
+      - description: Chapter ID
+        in: path
+        name: chapterId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.WebResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.WebResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.WebResponse'
+      summary: Get pages of a chapter
+      tags:
+      - Page
+    post:
+      consumes:
+      - application/json
+      description: Create a new page inside a given chapter
+      parameters:
+      - description: Chapter ID
+        in: path
+        name: chapterId
+        required: true
+        type: integer
+      - description: Page request body
+        in: body
+        name: page
+        required: true
+        schema:
+          $ref: '#/definitions/request.PageRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.WebResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.WebResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.WebResponse'
+      summary: Add a page to a chapter
+      tags:
+      - Page
+  /orders:
+    post:
+      consumes:
+      - application/json
+      description: Create an order based on the provided request data
+      parameters:
+      - description: Order request payload
+        in: body
+        name: order
+        required: true
+        schema:
+          $ref: '#/definitions/request.OrderRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Order created successfully
+          schema:
+            $ref: '#/definitions/response.WebResponse'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/response.WebResponse'
+        "500":
+          description: Server error
+          schema:
+            $ref: '#/definitions/response.WebResponse'
+      summary: Create a new order
+      tags:
+      - Orders
+  /shelves:
+    post:
+      consumes:
+      - application/json
+      description: Create a new shelve for a user
+      parameters:
+      - description: Authorization token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Shelve request body
+        in: body
+        name: shelve
+        required: true
+        schema:
+          $ref: '#/definitions/request.ShelveCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/response.WebResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.WebResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.WebResponse'
+      summary: Create a new shelve
+      tags:
+      - Shelve
+  /users:
+    get:
+      description: Retrieve a list of all users
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successful retrieval of users
+          schema:
+            $ref: '#/definitions/response.WebResponse'
+        "500":
+          description: Service error
+          schema:
+            $ref: '#/definitions/response.WebResponse'
+      summary: Get all users
+      tags:
+      - Users
+    put:
+      consumes:
+      - application/json
+      description: Update user details based on the token
+      parameters:
+      - description: Bearer Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: User update request
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/request.UserUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Update successful
+          schema:
+            $ref: '#/definitions/response.WebResponse'
+        "400":
+          description: Invalid request or unauthorized
+          schema:
+            $ref: '#/definitions/response.WebResponse'
+        "500":
+          description: Failed to update user
+          schema:
+            $ref: '#/definitions/response.WebResponse'
+      summary: Update user information
+      tags:
+      - Users
+swagger: "2.0"

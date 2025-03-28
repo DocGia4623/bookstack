@@ -19,6 +19,17 @@ func NewOrderController(serv service.OrderService) *OrderController {
 	}
 }
 
+// CreateOrder godoc
+// @Summary Create a new order
+// @Description Create an order based on the provided request data
+// @Tags Orders
+// @Accept json
+// @Produce json
+// @Param order body request.OrderRequest true "Order request payload"
+// @Success 200 {object} response.WebResponse "Order created successfully"
+// @Failure 400 {object} response.WebResponse "Invalid request"
+// @Failure 500 {object} response.WebResponse "Server error"
+// @Router /orders [post]
 func (controller *OrderController) CreateOrder(c *gin.Context) {
 	var webResponse response.WebResponse
 	var request request.OrderRequest

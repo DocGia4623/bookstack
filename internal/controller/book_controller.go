@@ -24,6 +24,18 @@ func NewBookController(service service.BookService, userServ service.UserService
 	}
 }
 
+// CreateShelve godoc
+// @Summary Create a new shelve
+// @Description Create a new shelve for a user
+// @Tags Shelve
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Authorization token"
+// @Param shelve body request.ShelveCreateRequest true "Shelve request body"
+// @Success 201 {object} response.WebResponse
+// @Failure 400 {object} response.WebResponse
+// @Failure 500 {object} response.WebResponse
+// @Router /shelves [post]
 func (controller *BookController) CreateShelve(c *gin.Context) {
 	var shelveRequest request.ShelveCreateRequest
 	var webResponse response.WebResponse
@@ -88,6 +100,18 @@ func (controller *BookController) CreateShelve(c *gin.Context) {
 	c.JSON(http.StatusCreated, webResponse)
 }
 
+// CreateBook godoc
+// @Summary Create a new book
+// @Description Create a new book associated with a user
+// @Tags Book
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Authorization token"
+// @Param book body request.BookCreateRequest true "Book request body"
+// @Success 201 {object} response.WebResponse
+// @Failure 400 {object} response.WebResponse
+// @Failure 500 {object} response.WebResponse
+// @Router /books [post]
 func (controller *BookController) CreateBook(c *gin.Context) {
 	var bookRequest request.BookCreateRequest
 	var webResponse response.WebResponse
@@ -156,6 +180,14 @@ func (controller *BookController) CreateBook(c *gin.Context) {
 	c.JSON(http.StatusCreated, webResponse)
 }
 
+// GetBooks godoc
+// @Summary Get all books
+// @Description Retrieve all books available in the system
+// @Tags Book
+// @Produce json
+// @Success 200 {object} response.WebResponse
+// @Failure 500 {object} response.WebResponse
+// @Router /books [get]
 func (controller *BookController) GetBooks(c *gin.Context) {
 	var webResponse response.WebResponse
 	books, err := controller.bookSerivce.GetAllBook()
@@ -186,6 +218,18 @@ func (controller *BookController) GetBooks(c *gin.Context) {
 	c.JSON(http.StatusCreated, webResponse)
 }
 
+// CreateChapter godoc
+// @Summary Create a chapter for a book
+// @Description Add a new chapter to an existing book
+// @Tags Chapter
+// @Accept json
+// @Produce json
+// @Param bookId path int true "Book ID"
+// @Param chapter body request.BookChapterRequest true "Chapter request body"
+// @Success 201 {object} response.WebResponse
+// @Failure 400 {object} response.WebResponse
+// @Failure 500 {object} response.WebResponse
+// @Router /books/{bookId}/chapters [post]
 func (controller *BookController) CreateChapter(c *gin.Context) {
 	bookIdStr := c.Param("bookId")                        // Lấy bookId từ URL
 	bookId64, err := strconv.ParseUint(bookIdStr, 10, 32) // Chuyển thành uint64
@@ -227,6 +271,16 @@ func (controller *BookController) CreateChapter(c *gin.Context) {
 	c.JSON(http.StatusCreated, webResponse)
 }
 
+// GetChapters godoc
+// @Summary Get all chapters of a book
+// @Description Retrieve all chapters associated with a book
+// @Tags Chapter
+// @Produce json
+// @Param bookId path int true "Book ID"
+// @Success 200 {object} response.WebResponse
+// @Failure 400 {object} response.WebResponse
+// @Failure 500 {object} response.WebResponse
+// @Router /books/{bookId}/chapters [get]
 func (controller *BookController) GetChapters(c *gin.Context) {
 	var webResponse response.WebResponse
 	bookIdStr := c.Param("bookId") // Lấy bookId từ URL
@@ -265,6 +319,18 @@ func (controller *BookController) GetChapters(c *gin.Context) {
 	c.JSON(http.StatusOK, webResponse)
 }
 
+// AddPage godoc
+// @Summary Add a page to a chapter
+// @Description Create a new page inside a given chapter
+// @Tags Page
+// @Accept json
+// @Produce json
+// @Param chapterId path int true "Chapter ID"
+// @Param page body request.PageRequest true "Page request body"
+// @Success 200 {object} response.WebResponse
+// @Failure 400 {object} response.WebResponse
+// @Failure 500 {object} response.WebResponse
+// @Router /chapters/{chapterId}/pages [post]
 func (controller *BookController) AddPage(c *gin.Context) {
 	var webResponse response.WebResponse
 	var request request.PageRequest
@@ -308,6 +374,16 @@ func (controller *BookController) AddPage(c *gin.Context) {
 	c.JSON(http.StatusOK, webResponse)
 }
 
+// GetPages godoc
+// @Summary Get pages of a chapter
+// @Description Retrieve all pages within a chapter
+// @Tags Page
+// @Produce json
+// @Param chapterId path int true "Chapter ID"
+// @Success 200 {object} response.WebResponse
+// @Failure 400 {object} response.WebResponse
+// @Failure 500 {object} response.WebResponse
+// @Router /chapters/{chapterId}/pages [get]
 func (controller *BookController) GetPages(c *gin.Context) {
 	var webResponse response.WebResponse
 	var pages []models.Page
@@ -346,6 +422,18 @@ func (controller *BookController) GetPages(c *gin.Context) {
 	c.JSON(http.StatusOK, webResponse)
 }
 
+// CreateCompleteBook godoc
+// @Summary Create a complete book with chapters and pages
+// @Description Create a fully detailed book with associated chapters and pages
+// @Tags Book
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Authorization token"
+// @Param book body request.CompleteBookCreateRequest true "Complete book request body"
+// @Success 201 {object} response.WebResponse
+// @Failure 400 {object} response.WebResponse
+// @Failure 500 {object} response.WebResponse
+// @Router /books/complete [post]
 func (controller *BookController) CreateCompleteBook(c *gin.Context) {
 	var webResponse response.WebResponse
 	var request request.CompleteBookCreateRequest

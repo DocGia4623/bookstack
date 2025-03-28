@@ -13,7 +13,8 @@ type BookCreateRequest struct {
 	ShelveID    uint         `json:"shelve_id" binding:"required"` // ID của kệ sách chứa nó (bắt buộc)
 	Restricted  bool         `json:"restricted"`                   // Trạng thái kiểm soát quyền truy cập
 	CreatedBy   uint         `json:"created_by"`                   // ID của người tạo sách
-	Tags        []TagRequest `json:"tags"`                         // Danh sách tag
+	Price       float64      `json:"price"`
+	Tags        []TagRequest `json:"tags"` // Danh sách tag
 }
 
 type TagRequest struct {
