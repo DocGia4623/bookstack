@@ -5,6 +5,7 @@ import (
 	"bookstack/internal/dto/response"
 	"bookstack/internal/service"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -102,6 +103,47 @@ func (controller *UserController) UpdateUser(c *gin.Context) {
 		Status:  "Success",
 		Message: "Update user successful",
 		Data:    user,
+	}
+	c.JSON(http.StatusOK, webResponse)
+}
+
+// DeleteUser godoc
+// @Summary Xóa người dùng
+// @Description Xóa người dùng dựa trên ID
+// @Tags users
+// @Param userId path int true "ID của người dùng cần xóa"
+// @Produce json
+// @Success 200 {object} response.WebResponse "Xóa người dùng thành công"
+// @Failure 400 {object} response.WebResponse "Không lấy được userId hợp lệ"
+// @Failure 500 {object} response.WebResponse "Lỗi server"
+// @Router /users/{userId} [delete]
+func (controller *UserController) DeleteUser(c *gin.Context) {
+	var webResponse response.WebResponse
+	userIdStr := c.Param("userId")
+	userId, err := strconv.Atoi(userIdStr)
+	if err != nil {
+		webResponse = response.WebResponse{
+			Code:    http.StatusBadRequest,
+			Status:  "Fail",
+			Message: "Cant get userId",
+		}
+		c.JSON(http.StatusBadRequest, webResponse)
+		return
+	}
+	err = controller.UserService.DeleteUser(userId)
+	if err != nil {
+		webResponse = response.WebResponse{
+			Code:    http.StatusInternalServerError,
+			Status:  "Fail",
+			Message: "Server error" + err.Error(),
+		}
+		c.JSON(http.StatusInternalServerError, webResponse)
+		return
+	}
+	webResponse = response.WebResponse{
+		Code:    http.StatusOK,
+		Status:  "Success",
+		Message: "Delete user successful",
 	}
 	c.JSON(http.StatusOK, webResponse)
 }

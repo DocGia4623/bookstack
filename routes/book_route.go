@@ -25,5 +25,7 @@ func BookRoute(bookController controller.BookController, router *gin.Engine) {
 		BookRoutes.POST("/chapter/:chapterId/getpage", bookController.GetPages)
 		// Tạo kệ sách
 		BookRoutes.POST("/shelve", bookController.CreateShelve)
+		// Xem tất cả kệ sách
+		BookRoutes.GET("/shelve", bookController.GetShelves)
 	}
 }

@@ -142,11 +142,20 @@ func (r *UserRepositoryImpl) UpdateUser(id int, updateRequest request.UserUpdate
 		return models.User{}, err
 	}
 
-	err = copier.Copy(&user, &updateRequest)
+	// Copy nhưng bỏ qua giá trị rỗng
+	err = copier.CopyWithOption(&user, &updateRequest, copier.Option{IgnoreEmpty: true})
 	if err != nil {
 		return models.User{}, err
 	}
+	if updateRequest.Password != "" {
+		password, err := utils.Hashpassword(updateRequest.Password)
+		if err != nil {
+			return models.User{}, err
+		}
+		user.Password = password
+	}
 
+	// Cập nhật dữ liệu
 	err = r.db.Save(&user).Error
 	if err != nil {
 		return models.User{}, err

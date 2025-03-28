@@ -88,8 +88,25 @@ func (controller *BookController) CreateShelve(c *gin.Context) {
 		return
 	}
 	var shelveResponse response.ShelveResponse
-	copier.Copy(shelveResponse, shelve)
+	copier.Copy(&shelveResponse, shelve)
 	shelveResponse.CreatedBy = user.FullName
+	var tags []response.TagResponse
+	var tagResponsen response.TagResponse
+	for _, tag := range shelve.Tags {
+		err := copier.Copy(&tagResponsen, tag)
+		if err != nil {
+			webResponse = response.WebResponse{
+				Code:    http.StatusInternalServerError,
+				Status:  "error",
+				Message: "error during create shelve" + err.Error(),
+				Data:    nil,
+			}
+			c.JSON(http.StatusBadRequest, webResponse)
+			return
+		}
+		tags = append(tags, tagResponsen)
+	}
+	shelveResponse.Tags = tags
 	// Phản hồi thành công
 	webResponse = response.WebResponse{
 		Code:    http.StatusCreated,
@@ -163,13 +180,16 @@ func (controller *BookController) CreateBook(c *gin.Context) {
 		return
 	}
 	var bookReponse response.BookResponse
-	copier.Copy(bookReponse, book)
-	for _, tags := range book.Tags {
-		bookReponse.Tags = append(bookReponse.Tags, tags.Name)
+	var tags []response.TagResponse
+	var tag response.TagResponse
+	copier.Copy(&bookReponse, book)
+	for _, t := range book.Tags {
+		copier.Copy(&tag, t)
+		tags = append(tags, tag)
 	}
 	bookReponse.Shelve = book.Shelve.Name
 	bookReponse.CreatedBy = user.FullName
-
+	bookReponse.Tags = tags
 	// Phản hồi thành công
 	webResponse = response.WebResponse{
 		Code:    http.StatusCreated,
@@ -487,6 +507,63 @@ func (controller *BookController) CreateCompleteBook(c *gin.Context) {
 		Status:  "success",
 		Message: "Pages",
 		Data:    book,
+	}
+	c.JSON(http.StatusOK, webResponse)
+}
+
+func (controller *BookController) GetShelves(c *gin.Context) {
+	var webResponse response.WebResponse
+	shelves, err := controller.bookSerivce.GetShelves()
+	if err != nil {
+		webResponse = response.WebResponse{
+			Code:    http.StatusInternalServerError,
+			Status:  "error",
+			Message: "Server error",
+			Data:    nil,
+		}
+		c.JSON(http.StatusInternalServerError, webResponse)
+		return
+	}
+	var shelveResponses []response.ShelveResponse
+	err = copier.Copy(&shelveResponses, shelves)
+	if err != nil {
+		webResponse = response.WebResponse{
+			Code:    http.StatusInternalServerError,
+			Status:  "error",
+			Message: "Server error" + err.Error(),
+			Data:    nil,
+		}
+		c.JSON(http.StatusInternalServerError, webResponse)
+		return
+	}
+
+	for _, shelveResponse := range shelveResponses {
+		var tags []response.TagResponse
+		var tagResponse response.TagResponse
+
+		for _, tag := range shelveResponse.Tags {
+			err := copier.Copy(&tagResponse, tag)
+			if err != nil {
+				webResponse = response.WebResponse{
+					Code:    http.StatusInternalServerError,
+					Status:  "error",
+					Message: "Server error" + err.Error(),
+					Data:    nil,
+				}
+				c.JSON(http.StatusInternalServerError, webResponse)
+				return
+			}
+			tags = append(tags, tagResponse)
+		}
+
+		shelveResponse.Tags = tags
+	}
+
+	webResponse = response.WebResponse{
+		Code:    http.StatusOK,
+		Status:  "success",
+		Message: "Pages",
+		Data:    shelveResponses,
 	}
 	c.JSON(http.StatusOK, webResponse)
 }

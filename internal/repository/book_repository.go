@@ -18,6 +18,7 @@ type BookRepository interface {
 	GetChaptersOfBook(int) ([]models.Chapter, error)
 	AddPage(uint, request.PageRequest) (models.Page, error)
 	GetPageChapter(int) ([]models.Page, error)
+	GetShelves() ([]models.Shelve, error)
 }
 
 type BookRepositoryImpl struct {
@@ -28,6 +29,19 @@ func NewBookRepositoryImpl(Db *gorm.DB) BookRepository {
 	return &BookRepositoryImpl{
 		DB: Db,
 	}
+}
+
+func (b *BookRepositoryImpl) GetShelves() ([]models.Shelve, error) {
+	var shelves []models.Shelve
+	err := b.DB.
+		Preload("CreatedBy").
+		Preload("Books").
+		Preload("Tags").
+		Find(&shelves).Error
+	if err != nil {
+		return nil, err
+	}
+	return shelves, nil
 }
 
 func (b *BookRepositoryImpl) CreateCompleteBook(userId int, req request.CompleteBookCreateRequest) (models.Book, error) {

@@ -15,5 +15,6 @@ func UserRoute(controller controller.UserController, mw *middleware.Middleware, 
 		UserRoutes.GET("/", mw.AuthorizeRole(constant.ReadUser), controller.GetAllUser)
 		// Update user
 		UserRoutes.PUT("/", controller.UpdateUser)
+		UserRoutes.DELETE("/:userId", controller.DeleteUser)
 	}
 }

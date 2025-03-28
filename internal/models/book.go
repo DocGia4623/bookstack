@@ -59,7 +59,7 @@ type Shelve struct {
 	Name        string    `json:"name"`                                                   // Tên kệ
 	Description string    `json:"description"`                                            // Mô tả kệ
 	Order       int       `json:"order"`                                                  // Thứ tự hiển thị của kệ
-	Books       []Book    `json:"books"`                                                  // Danh sách sách trong kệ
+	Books       []Book    `gorm:"foreignKey:ShelveID" json:"books"`                       // Danh sách sách trong kệ
 	Tags        []Tag     `gorm:"polymorphic:Entity;polymorphicValue:shelve" json:"tags"` // Tags liên kết với kệ
 	Comments    []Comment `gorm:"polymorphic:Entity;polymorphicValue:shelve" json:"comments"`
 	CreatedBy   uint      `json:"created_by"` // ID của người tạo kệ
