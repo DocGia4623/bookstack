@@ -930,8 +930,7 @@ func (controller *BookController) UpdateChapter(c *gin.Context) {
 // @Success 200 {object} response.WebResponse
 // @Failure 400 {object} response.WebResponse
 // @Failure 500 {object} response.WebResponse
-// @Router /chapter/{chapterId}/page/{pageId} [put]
-
+// @Router /chapters/{chapterId}/pages/{pageId} [put]
 func (controller *BookController) UpdatePage(c *gin.Context) {
 	var webResponse response.WebResponse
 	var request request.PageRequest

@@ -532,6 +532,57 @@ const docTemplate = `{
             }
         },
         "/chapters/{chapterId}": {
+            "put": {
+                "description": "Update a chapter by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Chapter"
+                ],
+                "summary": "Update a chapter",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Chapter ID",
+                        "name": "chapterId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Chapter request body",
+                        "name": "chapter",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.BookChapterRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.WebResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.WebResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.WebResponse"
+                        }
+                    }
+                }
+            },
             "delete": {
                 "description": "Delete a chapter by ID",
                 "produces": [
@@ -629,6 +680,59 @@ const docTemplate = `{
                         "type": "integer",
                         "description": "Chapter ID",
                         "name": "chapterId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Page request body",
+                        "name": "page",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.PageRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.WebResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.WebResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.WebResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/chapters/{chapterId}/pages/{pageId}": {
+            "put": {
+                "description": "Update a page by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Page"
+                ],
+                "summary": "Update a page",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Page ID",
+                        "name": "pageId",
                         "in": "path",
                         "required": true
                     },
