@@ -43,6 +43,10 @@ func ValidateAccessToken(token string, signedJWTKey string) (interface{}, error)
 	if exists > 0 { // Nếu token có trong Redis, nghĩa là nó đã bị thu hồi
 		return nil, fmt.Errorf("token has been revoked")
 	}
+	// Loại bỏ tiền tố "Bearer " nếu có
+	if len(token) > 7 && token[:7] == "Bearer " {
+		token = token[7:]
+	}
 	// 2️⃣ Giải mã token
 	tkn, err := jwt.Parse(token, func(jwtToken *jwt.Token) (interface{}, error) {
 		if _, ok := jwtToken.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -116,4 +120,13 @@ func ValidateRefreshToken(token string, signedJWTKey string) (interface{}, inter
 	}
 	// 5️⃣ trả về
 	return nil, nil, fmt.Errorf("token does not contain subject")
+}
+
+func RevokeToken(token string) error {
+	ctx := context.Background()
+	err := config.RedisClient.Set(ctx, token, "true", 0).Err()
+	if err != nil {
+		return fmt.Errorf("redis error: %w", err)
+	}
+	return nil
 }

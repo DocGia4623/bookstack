@@ -5,6 +5,7 @@ import (
 	"bookstack/internal/dto/request"
 	"bookstack/internal/dto/response"
 	"bookstack/internal/service"
+	"bookstack/utils"
 	"log"
 	"net/http"
 
@@ -164,7 +165,41 @@ func (controller *AuthenticationController) Logout(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, webResponse)
 		return
 	}
-	err := controller.AuthenticationService.Logout(token)
+	conf, err := config.LoadConfig()
+	if err != nil {
+		webResponse = response.WebResponse{
+			Code:    http.StatusInternalServerError,
+			Status:  "error",
+			Message: "Failed to load config",
+			Data:    nil,
+		}
+		c.JSON(http.StatusInternalServerError, webResponse)
+		return
+	}
+	sub, err := utils.ValidateAccessToken(token, conf.AccessTokenSecret)
+	if err != nil {
+		webResponse = response.WebResponse{
+			Code:    http.StatusUnauthorized,
+			Status:  "error",
+			Message: err.Error(),
+			Data:    nil,
+		}
+		c.JSON(http.StatusUnauthorized, webResponse)
+		return
+	}
+	userIdFloat, ok := sub.(float64)
+	if !ok {
+		webResponse = response.WebResponse{
+			Code:    http.StatusUnauthorized,
+			Status:  "error",
+			Message: "Invalid user ID format in token",
+			Data:    nil,
+		}
+		c.JSON(http.StatusUnauthorized, webResponse)
+		return
+	}
+	userId := int(userIdFloat)
+	err = controller.AuthenticationService.Logout(token, userId)
 	if err != nil {
 		webResponse = response.WebResponse{
 			Code:    http.StatusInternalServerError,

@@ -7,15 +7,24 @@ import (
 )
 
 type BookService interface {
+	//book
 	CreateCompleteBook(int, request.CompleteBookCreateRequest) (models.Book, error)
 	CreateBook(int, request.BookCreateRequest) (models.Book, error)
-	CreateShelve(int, request.ShelveCreateRequest) (models.Shelve, error)
+	DeleteBook(int) error
+	UpdateBook(int, request.BookCreateRequest) (models.Book, error)
 	GetAllBook() ([]models.Book, error)
+	//shelve
+	CreateShelve(int, request.ShelveCreateRequest) (models.Shelve, error)
+	GetShelves() ([]models.Shelve, error)
+	DeleteShelve(int) error
+	//chapter
 	CreateChapter(uint, request.BookChapterRequest) (models.Chapter, error)
 	GetChaptersOfBook(int) ([]models.Chapter, error)
+	DeleteChapter(int) error
+	//page
 	AddPage(uint, request.PageRequest) (models.Page, error)
 	GetPageChapter(int) ([]models.Page, error)
-	GetShelves() ([]models.Shelve, error)
+	DeletePage(int) error
 }
 
 type BookServiceImpl struct {
@@ -26,6 +35,25 @@ func NewBookServiceImpl(repository repository.BookRepository) BookService {
 	return &BookServiceImpl{
 		repo: repository,
 	}
+}
+func (b *BookServiceImpl) DeleteChapter(chapterId int) error {
+	return b.repo.DeleteChapter(chapterId)
+}
+
+func (b *BookServiceImpl) DeletePage(pageId int) error {
+	return b.repo.DeletePage(pageId)
+}
+
+func (b *BookServiceImpl) DeleteShelve(shelveId int) error {
+	return b.repo.DeleteShelve(shelveId)
+}
+
+func (b *BookServiceImpl) UpdateBook(bookId int, request request.BookCreateRequest) (models.Book, error) {
+	return b.repo.UpdateBook(bookId, request)
+}
+
+func (b *BookServiceImpl) DeleteBook(bookId int) error {
+	return b.repo.DeleteBook(bookId)
 }
 
 func (b *BookServiceImpl) GetShelves() ([]models.Shelve, error) {

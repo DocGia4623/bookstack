@@ -110,7 +110,7 @@ func (controller *UserController) UpdateUser(c *gin.Context) {
 // DeleteUser godoc
 // @Summary Xóa người dùng
 // @Description Xóa người dùng dựa trên ID
-// @Tags users
+// @Tags Users
 // @Param userId path int true "ID của người dùng cần xóa"
 // @Produce json
 // @Success 200 {object} response.WebResponse "Xóa người dùng thành công"

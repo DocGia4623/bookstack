@@ -9,23 +9,22 @@ import (
 func BookRoute(bookController controller.BookController, router *gin.Engine) {
 	BookRoutes := router.Group("/book")
 	{
-		// 1 cuốn sách hoàn chỉnh
+		//book
 		BookRoutes.POST("/complete", bookController.CreateCompleteBook)
-		// tạo 1 cuốn sách, ko tạo chapter và page
 		BookRoutes.POST("/", bookController.CreateBook)
-		// Lấy tất cả sách
 		BookRoutes.GET("/", bookController.GetBooks)
-		// Thêm chapter cho 1 cuốn sách
-		BookRoutes.POST("/:bookId/chapter", bookController.CreateChapter)
-		// Lấy chapter của 1 cuốn sách
-		BookRoutes.GET("/:bookId/chapter", bookController.GetChapters)
-		// Thêm trang vào chapter
-		BookRoutes.POST("/chapter/:chapterId/addpage", bookController.AddPage)
-		// Lấy trang của chapter
-		BookRoutes.POST("/chapter/:chapterId/getpage", bookController.GetPages)
-		// Tạo kệ sách
+		BookRoutes.DELETE("/:bookId", bookController.DeleteBook)
+		//shelve
 		BookRoutes.POST("/shelve", bookController.CreateShelve)
-		// Xem tất cả kệ sách
 		BookRoutes.GET("/shelve", bookController.GetShelves)
+		BookRoutes.DELETE("/shelve/:shelveId", bookController.DeleteShelve)
+		//chapter
+		BookRoutes.POST("/:bookId/chapter", bookController.CreateChapter)
+		BookRoutes.GET("/:bookId/chapter", bookController.GetChapters)
+		BookRoutes.DELETE("/:bookId/chapter/:chapterId", bookController.DeleteChapter)
+		//page
+		BookRoutes.POST("/chapter/:chapterId/addpage", bookController.AddPage)
+		BookRoutes.GET("/chapter/:chapterId/getpage", bookController.GetPages)
+		BookRoutes.DELETE("/chapter/:chapterId/page/:pageId", bookController.DeletePage)
 	}
 }

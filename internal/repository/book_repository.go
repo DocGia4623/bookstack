@@ -10,15 +10,24 @@ import (
 )
 
 type BookRepository interface {
+	//book
 	CreateCompleteBook(int, request.CompleteBookCreateRequest) (models.Book, error)
 	CreateBook(int, request.BookCreateRequest) (models.Book, error)
 	GetAllBook() ([]models.Book, error)
+	UpdateBook(int, request.BookCreateRequest) (models.Book, error)
+	DeleteBook(int) error
+	//shelve
 	CreateShelve(int, request.ShelveCreateRequest) (models.Shelve, error)
+	GetShelves() ([]models.Shelve, error)
+	DeleteShelve(int) error
+	//chapter
 	CreateChapter(uint, request.BookChapterRequest) (models.Chapter, error)
 	GetChaptersOfBook(int) ([]models.Chapter, error)
+	DeleteChapter(int) error
+	//page
 	AddPage(uint, request.PageRequest) (models.Page, error)
 	GetPageChapter(int) ([]models.Page, error)
-	GetShelves() ([]models.Shelve, error)
+	DeletePage(int) error
 }
 
 type BookRepositoryImpl struct {
@@ -29,6 +38,58 @@ func NewBookRepositoryImpl(Db *gorm.DB) BookRepository {
 	return &BookRepositoryImpl{
 		DB: Db,
 	}
+}
+
+func (b *BookRepositoryImpl) DeleteChapter(chapterId int) error {
+	var chapter models.Chapter
+	err := b.DB.Where("id = ?", chapterId).Delete(&chapter).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (b *BookRepositoryImpl) DeletePage(pageId int) error {
+	var page models.Page
+	err := b.DB.Where("id = ?", pageId).Delete(&page).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+func (b *BookRepositoryImpl) DeleteShelve(shelveId int) error {
+	var shelve models.Shelve
+	err := b.DB.Where("id = ?", shelveId).Delete(&shelve).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (b *BookRepositoryImpl) UpdateBook(bookId int, request request.BookCreateRequest) (models.Book, error) {
+	var book models.Book
+	err := b.DB.Where("id = ?", bookId).First(&book).Error
+	if err != nil {
+		return models.Book{}, err
+	}
+	err = copier.Copy(&book, request)
+	if err != nil {
+		return models.Book{}, err
+	}
+	err = b.DB.Save(&book).Error
+	if err != nil {
+		return models.Book{}, err
+	}
+	return book, nil
+}
+
+func (b *BookRepositoryImpl) DeleteBook(bookId int) error {
+	var book models.Book
+	err := b.DB.Where("id = ?", bookId).Delete(&book).Error
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (b *BookRepositoryImpl) GetShelves() ([]models.Shelve, error) {
@@ -49,6 +110,18 @@ func (b *BookRepositoryImpl) CreateCompleteBook(userId int, req request.Complete
 	book, err := b.CreateBook(userId, req.BookCreateRequest)
 	if err != nil {
 		return models.Book{}, fmt.Errorf("failed to create book: %w", err)
+	}
+
+	// Liên kết với Shelve nếu có
+	if req.BookCreateRequest.ShelveID > 0 {
+		var shelve models.Shelve
+		if err := b.DB.First(&shelve, req.BookCreateRequest.ShelveID).Error; err != nil {
+			return models.Book{}, fmt.Errorf("failed to find shelve: %w", err)
+		}
+		book.Shelve = shelve
+		if err := b.DB.Save(&book).Error; err != nil {
+			return models.Book{}, fmt.Errorf("failed to update book shelve: %w", err)
+		}
 	}
 
 	// Tạo danh sách chương cho sách
@@ -144,7 +217,7 @@ func (b *BookRepositoryImpl) CreateChapter(bookId uint, request request.BookChap
 }
 func (b *BookRepositoryImpl) GetAllBook() ([]models.Book, error) {
 	var books []models.Book
-	err := b.DB.Preload("Chapters").Preload("Tags").Find(&books).Error
+	err := b.DB.Preload("Chapters").Preload("Tags").Preload("Shelve").Find(&books).Error
 	if err != nil {
 		return []models.Book{}, err
 	}

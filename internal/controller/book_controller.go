@@ -226,8 +226,23 @@ func (controller *BookController) GetBooks(c *gin.Context) {
 	for _, book := range books {
 		var bookResponse response.BookResponse
 		copier.Copy(&bookResponse, &book)
+		// Kiểm tra CreatedBy có tồn tại không
+		user, err := controller.userService.GetUserById(int(book.CreatedBy))
+		if err != nil {
+			webResponse = response.WebResponse{
+				Code:    http.StatusInternalServerError,
+				Status:  "error",
+				Message: "cant find user",
+				Data:    nil,
+			}
+			c.JSON(http.StatusInternalServerError, webResponse)
+			return
+		}
+		bookResponse.CreatedBy = user.FullName
+		bookResponse.Shelve = book.Shelve.Name
 		booksResponse = append(booksResponse, bookResponse)
 	}
+
 	// Phản hồi thành công
 	webResponse = response.WebResponse{
 		Code:    http.StatusCreated,
@@ -502,15 +517,35 @@ func (controller *BookController) CreateCompleteBook(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, webResponse)
 		return
 	}
+
+	var bookResponse response.BookResponse
+	copier.Copy(&bookResponse, book)
+	bookResponse.CreatedBy = user.FullName
+	bookResponse.Shelve = book.Shelve.Name
+	var tags []response.TagResponse
+	var tag response.TagResponse
+	for _, t := range book.Tags {
+		copier.Copy(&tag, t)
+		tags = append(tags, tag)
+	}
+	bookResponse.Tags = tags
 	webResponse = response.WebResponse{
 		Code:    http.StatusOK,
 		Status:  "success",
 		Message: "Pages",
-		Data:    book,
+		Data:    bookResponse,
 	}
 	c.JSON(http.StatusOK, webResponse)
 }
 
+// GetShelves godoc
+// @Summary Get all shelves
+// @Description Retrieve all shelves available in the system
+// @Tags Shelve
+// @Produce json
+// @Success 200 {object} response.WebResponse
+// @Failure 500 {object} response.WebResponse
+// @Router /shelves [get]
 func (controller *BookController) GetShelves(c *gin.Context) {
 	var webResponse response.WebResponse
 	shelves, err := controller.bookSerivce.GetShelves()
@@ -564,6 +599,261 @@ func (controller *BookController) GetShelves(c *gin.Context) {
 		Status:  "success",
 		Message: "Pages",
 		Data:    shelveResponses,
+	}
+	c.JSON(http.StatusOK, webResponse)
+}
+
+// DeleteBook godoc
+// @Summary Delete a book
+// @Description Delete a book by ID
+// @Tags Book
+// @Produce json
+// @Param bookId path int true "Book ID"
+// @Success 200 {object} response.WebResponse
+// @Failure 400 {object} response.WebResponse
+// @Failure 500 {object} response.WebResponse
+// @Router /books/{bookId} [delete]
+func (controller *BookController) DeleteBook(c *gin.Context) {
+	var webResponse response.WebResponse
+	bookIdStr := c.Param("bookId")
+	bookId, err := strconv.Atoi(bookIdStr)
+	if err != nil {
+		webResponse = response.WebResponse{
+			Code:    http.StatusBadRequest,
+			Status:  "error",
+			Message: "cant get bookId",
+			Data:    nil,
+		}
+		c.JSON(http.StatusBadRequest, webResponse)
+		return
+	}
+	err = controller.bookSerivce.DeleteBook(bookId)
+	if err != nil {
+		webResponse = response.WebResponse{
+			Code:    http.StatusInternalServerError,
+			Status:  "error",
+			Message: "cant delete book",
+			Data:    nil,
+		}
+		c.JSON(http.StatusInternalServerError, webResponse)
+		return
+	}
+	webResponse = response.WebResponse{
+		Code:    http.StatusOK,
+		Status:  "success",
+		Message: "book deleted",
+		Data:    nil,
+	}
+	c.JSON(http.StatusOK, webResponse)
+}
+
+// UpdateBook godoc
+// @Summary Update a book
+// @Description Update a book by ID
+// @Tags Book
+// @Accept json
+// @Produce json
+// @Param bookId path int true "Book ID"
+// @Param book body request.BookCreateRequest true "Book request body"
+// @Success 200 {object} response.WebResponse
+// @Failure 400 {object} response.WebResponse
+// @Failure 500 {object} response.WebResponse
+// @Router /books/{bookId} [put]
+func (controller *BookController) UpdateBook(c *gin.Context) {
+	var webResponse response.WebResponse
+	var request request.BookCreateRequest
+	bookIdStr := c.Param("bookId")
+	bookId, err := strconv.Atoi(bookIdStr)
+	if err != nil {
+		webResponse = response.WebResponse{
+			Code:    http.StatusBadRequest,
+			Status:  "error",
+			Message: "cant get bookId",
+			Data:    nil,
+		}
+		c.JSON(http.StatusBadRequest, webResponse)
+		return
+	}
+	book, err := controller.bookSerivce.UpdateBook(bookId, request)
+	if err != nil {
+		webResponse = response.WebResponse{
+			Code:    http.StatusInternalServerError,
+			Status:  "error",
+			Message: "cant update book",
+			Data:    nil,
+		}
+		c.JSON(http.StatusInternalServerError, webResponse)
+		return
+	}
+	var bookResponse response.BookResponse
+	copier.Copy(&bookResponse, book)
+	user, err := controller.userService.GetUserById(int(book.CreatedBy))
+	if err != nil {
+		webResponse = response.WebResponse{
+			Code:    http.StatusInternalServerError,
+			Status:  "error",
+			Message: "cant get user",
+			Data:    nil,
+		}
+		c.JSON(http.StatusInternalServerError, webResponse)
+		return
+	}
+	bookResponse.CreatedBy = user.FullName
+	bookResponse.Shelve = book.Shelve.Name
+	var tags []response.TagResponse
+	var tagResponse response.TagResponse
+	for _, t := range book.Tags {
+		err := copier.Copy(&tagResponse, t)
+		if err != nil {
+			webResponse = response.WebResponse{
+				Code:    http.StatusInternalServerError,
+				Status:  "error",
+				Message: "cant update book",
+				Data:    nil,
+			}
+			c.JSON(http.StatusInternalServerError, webResponse)
+			return
+		}
+		tags = append(tags, tagResponse)
+	}
+	bookResponse.Tags = tags
+	webResponse = response.WebResponse{
+		Code:    http.StatusOK,
+		Status:  "success",
+		Message: "book updated",
+		Data:    bookResponse,
+	}
+	c.JSON(http.StatusOK, webResponse)
+}
+
+// DeleteShelve godoc
+// @Summary Delete a shelve
+// @Description Delete a shelve by ID
+// @Tags Shelve
+// @Produce json
+// @Param shelveId path int true "Shelve ID"
+// @Success 200 {object} response.WebResponse
+// @Failure 400 {object} response.WebResponse
+// @Failure 500 {object} response.WebResponse
+// @Router /shelves/{shelveId} [delete]
+func (controller *BookController) DeleteShelve(c *gin.Context) {
+	var webResponse response.WebResponse
+	shelveIdStr := c.Param("shelveId")
+	shelveId, err := strconv.Atoi(shelveIdStr)
+	if err != nil {
+		webResponse = response.WebResponse{
+			Code:    http.StatusBadRequest,
+			Status:  "error",
+			Message: "cant get shelveId",
+			Data:    nil,
+		}
+		c.JSON(http.StatusBadRequest, webResponse)
+		return
+	}
+	err = controller.bookSerivce.DeleteShelve(shelveId)
+	if err != nil {
+		webResponse = response.WebResponse{
+			Code:    http.StatusInternalServerError,
+			Status:  "error",
+			Message: "cant delete shelve",
+			Data:    nil,
+		}
+		c.JSON(http.StatusInternalServerError, webResponse)
+		return
+	}
+	webResponse = response.WebResponse{
+		Code:    http.StatusOK,
+		Status:  "success",
+		Message: "shelve deleted",
+		Data:    nil,
+	}
+	c.JSON(http.StatusOK, webResponse)
+}
+
+// DeleteChapter godoc
+// @Summary Delete a chapter
+// @Description Delete a chapter by ID
+// @Tags Chapter
+// @Produce json
+// @Param chapterId path int true "Chapter ID"
+// @Success 200 {object} response.WebResponse
+// @Failure 400 {object} response.WebResponse
+// @Failure 500 {object} response.WebResponse
+// @Router /chapters/{chapterId} [delete]
+func (controller *BookController) DeleteChapter(c *gin.Context) {
+	var webResponse response.WebResponse
+	chapterIdStr := c.Param("chapterId")
+	chapterId, err := strconv.Atoi(chapterIdStr)
+	if err != nil {
+		webResponse = response.WebResponse{
+			Code:    http.StatusBadRequest,
+			Status:  "error",
+			Message: "cant get chapterId",
+			Data:    nil,
+		}
+		c.JSON(http.StatusBadRequest, webResponse)
+		return
+	}
+	err = controller.bookSerivce.DeleteChapter(chapterId)
+	if err != nil {
+		webResponse = response.WebResponse{
+			Code:    http.StatusInternalServerError,
+			Status:  "error",
+			Message: "cant delete chapter",
+			Data:    nil,
+		}
+		c.JSON(http.StatusInternalServerError, webResponse)
+		return
+	}
+	webResponse = response.WebResponse{
+		Code:    http.StatusOK,
+		Status:  "success",
+		Message: "chapter deleted",
+		Data:    nil,
+	}
+	c.JSON(http.StatusOK, webResponse)
+}
+
+// DeletePage godoc
+// @Summary Delete a page
+// @Description Delete a page by ID
+// @Tags Page
+// @Produce json
+// @Param pageId path int true "Page ID"
+// @Success 200 {object} response.WebResponse
+// @Failure 400 {object} response.WebResponse
+// @Failure 500 {object} response.WebResponse
+// @Router /chapter/{chapterId}/page/{pageId} [delete]
+func (controller *BookController) DeletePage(c *gin.Context) {
+	var webResponse response.WebResponse
+	pageIdStr := c.Param("pageId")
+	pageId, err := strconv.Atoi(pageIdStr)
+	if err != nil {
+		webResponse = response.WebResponse{
+			Code:    http.StatusBadRequest,
+			Status:  "error",
+			Message: "cant get pageId",
+			Data:    nil,
+		}
+		c.JSON(http.StatusBadRequest, webResponse)
+		return
+	}
+	err = controller.bookSerivce.DeletePage(pageId)
+	if err != nil {
+		webResponse = response.WebResponse{
+			Code:    http.StatusInternalServerError,
+			Status:  "error",
+			Message: "cant delete page",
+			Data:    nil,
+		}
+		c.JSON(http.StatusInternalServerError, webResponse)
+		return
+	}
+	webResponse = response.WebResponse{
+		Code:    http.StatusOK,
+		Status:  "success",
+		Message: "page deleted",
+		Data:    nil,
 	}
 	c.JSON(http.StatusOK, webResponse)
 }

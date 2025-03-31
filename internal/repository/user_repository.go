@@ -25,6 +25,7 @@ type UserRepository interface {
 	SaveToken(refreshToken models.RefreshToken) error
 	FindByToken(token string) (*models.RefreshToken, error)
 	DeleteToken(token string) error
+	DeleteUserToken(userId int) error
 }
 
 type UserRepositoryImpl struct {
@@ -37,6 +38,14 @@ func NewUserRepositoryImpl(db *gorm.DB, conf *config.Config) UserRepository {
 		db:     db,
 		config: conf,
 	}
+}
+
+func (u *UserRepositoryImpl) DeleteUserToken(userId int) error {
+	result := u.db.Where("user_id = ?", userId).Delete(&models.RefreshToken{})
+	if result.Error != nil {
+		return result.Error
+	}
+	return nil
 }
 
 func (u *UserRepositoryImpl) SaveToken(refreshToken models.RefreshToken) error {

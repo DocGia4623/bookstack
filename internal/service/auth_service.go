@@ -15,7 +15,7 @@ import (
 type AuthService interface {
 	Register(user request.UserCreateRequest) (models.User, error)
 	Login(email, password string) (string, string, int, error)
-	Logout(token string) error
+	Logout(token string, userId int) error
 	SaveRefreshToken(string, int) error
 	RefreshToken(token string, signedKey string) (string, string, error)
 }
@@ -77,11 +77,12 @@ func (s *AuthServiceImpl) Login(email, password string) (string, string, int, er
 	helper.ErrorPanic(err_refresh)
 	return refreshToken, accessToken, user.ID, nil
 }
-func (s *AuthServiceImpl) Logout(token string) error {
-	// err := utils.RevokeToken(token)
-	// if err != nil {
-	// 	return err
-	// }
+func (s *AuthServiceImpl) Logout(token string, userId int) error {
+	err := utils.RevokeToken(token)
+	if err != nil {
+		return err
+	}
+	s.repo.DeleteUserToken(userId)
 	return nil
 }
 
@@ -119,10 +120,16 @@ func (a *AuthServiceImpl) RefreshToken(token string, signedKey string) (string, 
 		return "", "", fmt.Errorf("cannot generate refresh token")
 	}
 
-	// Lưu refresh token mới vào database
-	a.repo.SaveToken(models.RefreshToken{
-		Token: newRefreshToken,
-	})
+	// Lưu refresh token mới vào database với user ID
+	userIdFloat, ok := sub.(float64)
+	if !ok {
+		return "", "", fmt.Errorf("invalid user ID format in token")
+	}
+	userId := int(userIdFloat)
+	err = a.repo.SaveRefreshToken(newRefreshToken, userId)
+	if err != nil {
+		return "", "", fmt.Errorf("failed to save new refresh token: %w", err)
+	}
 
 	return accessToken, newRefreshToken, nil
 }
