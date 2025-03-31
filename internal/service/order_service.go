@@ -9,6 +9,8 @@ import (
 type OrderService interface {
 	CreateOrder(request.OrderRequest) (models.Order, error)
 	CancelOrder(int) error
+	GetOrder(userID int) (models.Order, error)
+	GetUserOrder(orderId int) ([]models.Order, error)
 }
 
 type OrderServiceImpl struct {
@@ -19,6 +21,14 @@ func NewOrderServiceImpl(repository repository.OrderRepository) OrderService {
 	return &OrderServiceImpl{
 		repo: repository,
 	}
+}
+
+func (o *OrderServiceImpl) GetUserOrder(userId int) ([]models.Order, error) {
+	return o.repo.GetUserOrder(userId)
+}
+
+func (o *OrderServiceImpl) GetOrder(orderId int) (models.Order, error) {
+	return o.repo.GetOrder(orderId)
 }
 
 func (o *OrderServiceImpl) CreateOrder(request request.OrderRequest) (models.Order, error) {

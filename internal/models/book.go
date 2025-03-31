@@ -94,6 +94,8 @@ type Order struct {
 	TotalPrice  float64              `json:"total_price"`   // Tổng giá trị đơn hàng
 	Status      constant.OrderStatus `json:"status"`        // Trạng thái đơn hàng: pending, completed, cancelled
 	OrderDetail []OrderDetail        `json:"order_details"` // Danh sách sách trong đơn
+	Address     string               `json:"address"`       // Địa chỉ giao hàng
+	Phone       string               `json:"phone"`         // Số điện thoại liên hệ
 }
 
 // OrderDetail - Chi tiết đơn hàng

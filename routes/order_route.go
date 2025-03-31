@@ -10,5 +10,7 @@ func OrderRoute(controller controller.OrderController, router *gin.Engine) {
 	OrderRoutes := router.Group("/order")
 	{
 		OrderRoutes.POST("/", controller.CreateOrder)
+		OrderRoutes.GET("/", controller.GetUserOrder)
+		OrderRoutes.POST("/:orderId/cancel", controller.CancelOrder)
 	}
 }

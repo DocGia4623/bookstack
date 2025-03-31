@@ -627,6 +627,60 @@ paths:
       summary: Create a new order
       tags:
       - Orders
+  /orders/{orderId}:
+    get:
+      description: Get an order by ID
+      parameters:
+      - description: Order ID
+        in: path
+        name: orderId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Order retrieved successfully
+          schema:
+            $ref: '#/definitions/response.WebResponse'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/response.WebResponse'
+        "500":
+          description: Server error
+          schema:
+            $ref: '#/definitions/response.WebResponse'
+      summary: Get an order by ID
+      tags:
+      - Orders
+  /orders/{orderId}/cancel:
+    post:
+      description: Cancel an order by ID
+      parameters:
+      - description: Order ID
+        in: path
+        name: orderId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Order cancelled successfully
+          schema:
+            $ref: '#/definitions/response.WebResponse'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/response.WebResponse'
+        "500":
+          description: Server error
+          schema:
+            $ref: '#/definitions/response.WebResponse'
+      summary: Cancel an order by ID
+      tags:
+      - Orders
   /shelves:
     get:
       description: Retrieve all shelves available in the system

@@ -5,13 +5,16 @@ import (
 	"bookstack/internal/dto/request"
 	"bookstack/internal/models"
 
+	"fmt"
+
 	"github.com/jinzhu/copier"
 	"gorm.io/gorm"
 )
 
 type OrderRepository interface {
 	CreateOrder(request.OrderRequest) (models.Order, error)
-	GetOrder(int) ([]models.Order, error)
+	GetOrder(int) (models.Order, error)
+	GetUserOrder(int) ([]models.Order, error)
 	CancelOrder(int) error
 }
 
@@ -25,12 +28,21 @@ func NewOrderRepositoryImpl(db *gorm.DB) OrderRepository {
 	}
 }
 
-func (o *OrderRepositoryImpl) GetOrder(userId int) ([]models.Order, error) {
+func (o *OrderRepositoryImpl) GetUserOrder(userId int) ([]models.Order, error) {
 	var orders []models.Order
-
-	err := o.DB.Where("user_id = ?", userId).Find(&orders).Error
+	err := o.DB.Preload("OrderDetail").Preload("OrderDetail.Book").Where("user_id = ?", userId).Find(&orders).Error
 	if err != nil {
 		return nil, err
+	}
+	return orders, nil
+}
+
+func (o *OrderRepositoryImpl) GetOrder(id int) (models.Order, error) {
+	var orders models.Order
+
+	err := o.DB.Where("id = ?", id).Find(&orders).Error
+	if err != nil {
+		return models.Order{}, err
 	}
 	return orders, err
 }
@@ -54,19 +66,26 @@ func (o *OrderRepositoryImpl) CreateOrder(request request.OrderRequest) (models.
 		return models.Order{}, err
 	}
 
+	// Copy các trường không được copy tự động
+	order.Address = request.Address
+	order.Phone = request.Phone
+
 	// Chuyển đổi OrderDetailRequest thành OrderDetail
 	var orderDetails []models.OrderDetail
 	for _, detail := range request.OrderDetails {
-		price, err := o.GetBookPrice(int(detail.BookID))
-		if err != nil {
-			return models.Order{}, err
+		// Lấy thông tin sách từ DB
+		var book models.Book
+		if err := o.DB.First(&book, detail.BookID).Error; err != nil {
+			return models.Order{}, fmt.Errorf("book not found: %w", err)
 		}
+
 		orderDetails = append(orderDetails, models.OrderDetail{
 			BookID:   detail.BookID,
 			Quantity: detail.Quantity,
-			Price:    price, // Lấy giá sách từ DB thay vì hardcode
+			Price:    book.Price,
+			Book:     book,
 		})
-		totalPrice += price * float64(detail.Quantity)
+		totalPrice += book.Price * float64(detail.Quantity)
 	}
 
 	// Gán giá trị còn thiếu vào Order
@@ -74,8 +93,8 @@ func (o *OrderRepositoryImpl) CreateOrder(request request.OrderRequest) (models.
 	order.TotalPrice = totalPrice
 	order.Status = constant.Pending
 
-	// Lưu vào DB (dùng &order để tránh lỗi reflect)
-	err = o.DB.Create(&order).Error
+	// Lưu vào DB với preload Book
+	err = o.DB.Preload("OrderDetail.Book").Create(&order).Error
 	if err != nil {
 		return models.Order{}, err
 	}
@@ -85,7 +104,7 @@ func (o *OrderRepositoryImpl) CreateOrder(request request.OrderRequest) (models.
 
 func (o *OrderRepositoryImpl) CancelOrder(orderId int) error {
 	var order models.Order
-	err := o.DB.Where("order_id = ?", orderId).Find(&order).Error
+	err := o.DB.Where("id = ?", orderId).Find(&order).Error
 	if err != nil {
 		return err
 	}

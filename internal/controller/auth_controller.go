@@ -10,6 +10,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/copier"
 )
 
 type AuthenticationController struct {
@@ -57,7 +58,18 @@ func (controller *AuthenticationController) Register(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, webResponse)
 		return
 	}
-
+	var userRegisterResponse response.UserRegisterResponse
+	err = copier.Copy(&userRegisterResponse, &user)
+	if err != nil {
+		webResponse = response.WebResponse{
+			Code:    http.StatusInternalServerError,
+			Status:  "error",
+			Message: err.Error(),
+			Data:    nil,
+		}
+		c.JSON(http.StatusInternalServerError, webResponse)
+		return
+	}
 	// // Gửi email xác nhận
 	// err = utils.SendVerificationEmail(user.Email, user.FullName)
 	// if err != nil {
@@ -75,7 +87,7 @@ func (controller *AuthenticationController) Register(c *gin.Context) {
 		Code:    http.StatusOK,
 		Status:  "success",
 		Message: "User registered successfully, Please check your email to verify your account.",
-		Data:    user,
+		Data:    userRegisterResponse,
 	}
 	c.JSON(http.StatusOK, webResponse)
 }

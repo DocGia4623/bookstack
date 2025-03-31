@@ -702,6 +702,88 @@
                 }
             }
         },
+        "/orders/{orderId}": {
+            "get": {
+                "description": "Get an order by ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Orders"
+                ],
+                "summary": "Get an order by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Order ID",
+                        "name": "orderId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Order retrieved successfully",
+                        "schema": {
+                            "$ref": "#/definitions/response.WebResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/response.WebResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.WebResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/orders/{orderId}/cancel": {
+            "post": {
+                "description": "Cancel an order by ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Orders"
+                ],
+                "summary": "Cancel an order by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Order ID",
+                        "name": "orderId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Order cancelled successfully",
+                        "schema": {
+                            "$ref": "#/definitions/response.WebResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/response.WebResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.WebResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/shelves": {
             "get": {
                 "description": "Retrieve all shelves available in the system",
