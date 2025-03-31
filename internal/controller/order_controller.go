@@ -27,14 +27,14 @@ func NewOrderController(serv service.OrderService) *OrderController {
 // CreateOrder godoc
 // @Summary Create a new order
 // @Description Create an order based on the provided request data
-// @Tags Orders
+// @Tags Order
 // @Accept json
 // @Produce json
 // @Param order body request.OrderRequest true "Order request payload"
 // @Success 200 {object} response.WebResponse "Order created successfully"
 // @Failure 400 {object} response.WebResponse "Invalid request"
 // @Failure 500 {object} response.WebResponse "Server error"
-// @Router /orders [post]
+// @Router /order [post]
 func (controller *OrderController) CreateOrder(c *gin.Context) {
 	var webResponse response.WebResponse
 	var request request.OrderRequest
@@ -117,15 +117,15 @@ func (controller *OrderController) CreateOrder(c *gin.Context) {
 }
 
 // GetOrder godoc
-// @Summary Get an order by ID
-// @Description Get an order by ID
-// @Tags Orders
+// @Summary Get oroders by userId
+// @Description Get oders by userId
+// @Tags Order
 // @Produce json
-// @Param orderId path int true "Order ID"
+// @Param Authorization header string true "Authorization token"
 // @Success 200 {object} response.WebResponse "Order retrieved successfully"
 // @Failure 400 {object} response.WebResponse "Invalid request"
 // @Failure 500 {object} response.WebResponse "Server error"
-// @Router /orders/{orderId} [get]
+// @Router /order [get]
 func (controller *OrderController) GetUserOrder(c *gin.Context) {
 	var webResponse response.WebResponse
 	token := c.GetHeader("Authorization")
@@ -190,13 +190,13 @@ func (controller *OrderController) GetUserOrder(c *gin.Context) {
 // CancelOrder godoc
 // @Summary Cancel an order by ID
 // @Description Cancel an order by ID
-// @Tags Orders
+// @Tags Order
 // @Produce json
 // @Param orderId path int true "Order ID"
 // @Success 200 {object} response.WebResponse "Order cancelled successfully"
 // @Failure 400 {object} response.WebResponse "Invalid request"
 // @Failure 500 {object} response.WebResponse "Server error"
-// @Router /orders/{orderId}/cancel [post]
+// @Router /order/{orderId}/cancel [post]
 func (controller *OrderController) CancelOrder(c *gin.Context) {
 	var webResponse response.WebResponse
 	orderIdStr := c.Param("orderId")

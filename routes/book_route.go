@@ -25,8 +25,8 @@ func BookRoute(bookController controller.BookController, router *gin.Engine) {
 		BookRoutes.PUT("/:bookId/chapter/:chapterId", bookController.UpdateChapter)
 		BookRoutes.DELETE("/:bookId/chapter/:chapterId", bookController.DeleteChapter)
 		//page
-		BookRoutes.POST("/chapter/:chapterId/addpage", bookController.AddPage)
-		BookRoutes.GET("/chapter/:chapterId/getpage", bookController.GetPages)
+		BookRoutes.POST("/chapter/:chapterId/page", bookController.AddPage)
+		BookRoutes.GET("/chapter/:chapterId/page", bookController.GetPages)
 		BookRoutes.PUT("/chapter/:chapterId/page/:pageId", bookController.UpdatePage)
 		BookRoutes.DELETE("/chapter/:chapterId/page/:pageId", bookController.DeletePage)
 	}

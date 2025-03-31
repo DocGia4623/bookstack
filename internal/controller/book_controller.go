@@ -35,7 +35,7 @@ func NewBookController(service service.BookService, userServ service.UserService
 // @Success 201 {object} response.WebResponse
 // @Failure 400 {object} response.WebResponse
 // @Failure 500 {object} response.WebResponse
-// @Router /shelves [post]
+// @Router /book/shelve [post]
 func (controller *BookController) CreateShelve(c *gin.Context) {
 	var shelveRequest request.ShelveCreateRequest
 	var webResponse response.WebResponse
@@ -128,7 +128,7 @@ func (controller *BookController) CreateShelve(c *gin.Context) {
 // @Success 201 {object} response.WebResponse
 // @Failure 400 {object} response.WebResponse
 // @Failure 500 {object} response.WebResponse
-// @Router /books [post]
+// @Router /book [post]
 func (controller *BookController) CreateBook(c *gin.Context) {
 	var bookRequest request.BookCreateRequest
 	var webResponse response.WebResponse
@@ -264,7 +264,7 @@ func (controller *BookController) GetBooks(c *gin.Context) {
 // @Success 201 {object} response.WebResponse
 // @Failure 400 {object} response.WebResponse
 // @Failure 500 {object} response.WebResponse
-// @Router /books/{bookId}/chapters [post]
+// @Router /book/{bookId}/chapter [post]
 func (controller *BookController) CreateChapter(c *gin.Context) {
 	bookIdStr := c.Param("bookId")                        // Lấy bookId từ URL
 	bookId64, err := strconv.ParseUint(bookIdStr, 10, 32) // Chuyển thành uint64
@@ -315,7 +315,7 @@ func (controller *BookController) CreateChapter(c *gin.Context) {
 // @Success 200 {object} response.WebResponse
 // @Failure 400 {object} response.WebResponse
 // @Failure 500 {object} response.WebResponse
-// @Router /books/{bookId}/chapters [get]
+// @Router /book/{bookId}/chapter [get]
 func (controller *BookController) GetChapters(c *gin.Context) {
 	var webResponse response.WebResponse
 	bookIdStr := c.Param("bookId") // Lấy bookId từ URL
@@ -365,7 +365,7 @@ func (controller *BookController) GetChapters(c *gin.Context) {
 // @Success 200 {object} response.WebResponse
 // @Failure 400 {object} response.WebResponse
 // @Failure 500 {object} response.WebResponse
-// @Router /chapters/{chapterId}/pages [post]
+// @Router /book/chapter/{chapterId}/page [post]
 func (controller *BookController) AddPage(c *gin.Context) {
 	var webResponse response.WebResponse
 	var request request.PageRequest
@@ -418,7 +418,7 @@ func (controller *BookController) AddPage(c *gin.Context) {
 // @Success 200 {object} response.WebResponse
 // @Failure 400 {object} response.WebResponse
 // @Failure 500 {object} response.WebResponse
-// @Router /chapters/{chapterId}/pages [get]
+// @Router /book/chapter/{chapterId}/page [get]
 func (controller *BookController) GetPages(c *gin.Context) {
 	var webResponse response.WebResponse
 	var pages []models.Page
@@ -468,7 +468,7 @@ func (controller *BookController) GetPages(c *gin.Context) {
 // @Success 201 {object} response.WebResponse
 // @Failure 400 {object} response.WebResponse
 // @Failure 500 {object} response.WebResponse
-// @Router /books/complete [post]
+// @Router /book/complete [post]
 func (controller *BookController) CreateCompleteBook(c *gin.Context) {
 	var webResponse response.WebResponse
 	var request request.CompleteBookCreateRequest
@@ -545,7 +545,7 @@ func (controller *BookController) CreateCompleteBook(c *gin.Context) {
 // @Produce json
 // @Success 200 {object} response.WebResponse
 // @Failure 500 {object} response.WebResponse
-// @Router /shelves [get]
+// @Router /book/shelve [get]
 func (controller *BookController) GetShelves(c *gin.Context) {
 	var webResponse response.WebResponse
 	shelves, err := controller.bookSerivce.GetShelves()
@@ -612,7 +612,7 @@ func (controller *BookController) GetShelves(c *gin.Context) {
 // @Success 200 {object} response.WebResponse
 // @Failure 400 {object} response.WebResponse
 // @Failure 500 {object} response.WebResponse
-// @Router /books/{bookId} [delete]
+// @Router /book/{bookId} [delete]
 func (controller *BookController) DeleteBook(c *gin.Context) {
 	var webResponse response.WebResponse
 	bookIdStr := c.Param("bookId")
@@ -658,7 +658,7 @@ func (controller *BookController) DeleteBook(c *gin.Context) {
 // @Success 200 {object} response.WebResponse
 // @Failure 400 {object} response.WebResponse
 // @Failure 500 {object} response.WebResponse
-// @Router /books/{bookId} [put]
+// @Router /book/{bookId} [put]
 func (controller *BookController) UpdateBook(c *gin.Context) {
 	var webResponse response.WebResponse
 	var request request.BookCreateRequest
@@ -748,7 +748,7 @@ func (controller *BookController) UpdateBook(c *gin.Context) {
 // @Success 200 {object} response.WebResponse
 // @Failure 400 {object} response.WebResponse
 // @Failure 500 {object} response.WebResponse
-// @Router /shelves/{shelveId} [delete]
+// @Router /book/shelve/{shelveId} [delete]
 func (controller *BookController) DeleteShelve(c *gin.Context) {
 	var webResponse response.WebResponse
 	shelveIdStr := c.Param("shelveId")
@@ -792,7 +792,7 @@ func (controller *BookController) DeleteShelve(c *gin.Context) {
 // @Success 200 {object} response.WebResponse
 // @Failure 400 {object} response.WebResponse
 // @Failure 500 {object} response.WebResponse
-// @Router /chapters/{chapterId} [delete]
+// @Router /book/{bookId}/chapter/{chapterId} [delete]
 func (controller *BookController) DeleteChapter(c *gin.Context) {
 	var webResponse response.WebResponse
 	chapterIdStr := c.Param("chapterId")
@@ -836,7 +836,7 @@ func (controller *BookController) DeleteChapter(c *gin.Context) {
 // @Success 200 {object} response.WebResponse
 // @Failure 400 {object} response.WebResponse
 // @Failure 500 {object} response.WebResponse
-// @Router /chapter/{chapterId}/page/{pageId} [delete]
+// @Router /book/chapter/{chapterId}/page/{pageId} [delete]
 func (controller *BookController) DeletePage(c *gin.Context) {
 	var webResponse response.WebResponse
 	pageIdStr := c.Param("pageId")
@@ -882,7 +882,7 @@ func (controller *BookController) DeletePage(c *gin.Context) {
 // @Success 200 {object} response.WebResponse
 // @Failure 400 {object} response.WebResponse
 // @Failure 500 {object} response.WebResponse
-// @Router /chapters/{chapterId} [put]
+// @Router /book/{bookId}/chapter/{chapterId} [put]
 func (controller *BookController) UpdateChapter(c *gin.Context) {
 	var webResponse response.WebResponse
 	var request request.BookChapterRequest
@@ -930,7 +930,7 @@ func (controller *BookController) UpdateChapter(c *gin.Context) {
 // @Success 200 {object} response.WebResponse
 // @Failure 400 {object} response.WebResponse
 // @Failure 500 {object} response.WebResponse
-// @Router /chapters/{chapterId}/pages/{pageId} [put]
+// @Router /book/chapter/{chapterId}/page/{pageId} [put]
 func (controller *BookController) UpdatePage(c *gin.Context) {
 	var webResponse response.WebResponse
 	var request request.PageRequest

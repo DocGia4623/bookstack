@@ -202,7 +202,6 @@ func (b *BookRepositoryImpl) DeleteBook(bookId int) error {
 func (b *BookRepositoryImpl) GetShelves() ([]models.Shelve, error) {
 	var shelves []models.Shelve
 	err := b.DB.
-		Preload("CreatedBy").
 		Preload("Books").
 		Preload("Tags").
 		Find(&shelves).Error

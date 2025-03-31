@@ -24,11 +24,12 @@ func NewUserController(userService service.UserService) *UserController {
 // GetAllUser godoc
 // @Summary Get all users
 // @Description Retrieve a list of all users
-// @Tags Users
+// @Authorization header string true "Authorization token"
+// @Tags User
 // @Produce json
 // @Success 200 {object} response.WebResponse "Successful retrieval of users"
 // @Failure 500 {object} response.WebResponse "Service error"
-// @Router /users [get]
+// @Router /user [get]
 func (controller *UserController) GetAllUser(context *gin.Context) {
 	var webResponse response.WebResponse
 	users, err := controller.UserService.GetAllUsers()
@@ -53,7 +54,7 @@ func (controller *UserController) GetAllUser(context *gin.Context) {
 // UpdateUser godoc
 // @Summary Update user information
 // @Description Update user details based on the token
-// @Tags Users
+// @Tags User
 // @Accept json
 // @Produce json
 // @Param Authorization header string true "Bearer Token"
@@ -61,7 +62,7 @@ func (controller *UserController) GetAllUser(context *gin.Context) {
 // @Success 200 {object} response.WebResponse "Update successful"
 // @Failure 400 {object} response.WebResponse "Invalid request or unauthorized"
 // @Failure 500 {object} response.WebResponse "Failed to update user"
-// @Router /users [put]
+// @Router /user [put]
 func (controller *UserController) UpdateUser(c *gin.Context) {
 	var userUpdateRequest request.UserUpdateRequest
 	var webResponse response.WebResponse
@@ -122,13 +123,13 @@ func (controller *UserController) UpdateUser(c *gin.Context) {
 // DeleteUser godoc
 // @Summary Xóa người dùng
 // @Description Xóa người dùng dựa trên ID
-// @Tags Users
+// @Tags User
 // @Param userId path int true "ID của người dùng cần xóa"
 // @Produce json
 // @Success 200 {object} response.WebResponse "Xóa người dùng thành công"
 // @Failure 400 {object} response.WebResponse "Không lấy được userId hợp lệ"
 // @Failure 500 {object} response.WebResponse "Lỗi server"
-// @Router /users/{userId} [delete]
+// @Router /user/{userId} [delete]
 func (controller *UserController) DeleteUser(c *gin.Context) {
 	var webResponse response.WebResponse
 	userIdStr := c.Param("userId")
