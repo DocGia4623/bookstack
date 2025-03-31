@@ -174,7 +174,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/books": {
+        "/book": {
             "get": {
                 "description": "Retrieve all books available in the system",
                 "produces": [
@@ -198,7 +198,9 @@ const docTemplate = `{
                         }
                     }
                 }
-            },
+            }
+        },
+        "/books": {
             "post": {
                 "description": "Create a new book associated with a user",
                 "consumes": [
@@ -1128,12 +1130,20 @@ const docTemplate = `{
                 "user_id"
             ],
             "properties": {
+                "address": {
+                    "description": "Địa chỉ giao hàng",
+                    "type": "string"
+                },
                 "order_details": {
                     "description": "Danh sách sách trong đơn",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/request.OrderDetailRequest"
                     }
+                },
+                "phone": {
+                    "description": "Số điện thoại",
+                    "type": "string"
                 },
                 "user_id": {
                     "description": "Người đặt hàng",

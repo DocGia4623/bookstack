@@ -24,10 +24,12 @@ type BookRepository interface {
 	CreateChapter(uint, request.BookChapterRequest) (models.Chapter, error)
 	GetChaptersOfBook(int) ([]models.Chapter, error)
 	DeleteChapter(int) error
+	UpdateChapter(int, request.BookChapterRequest) (models.Chapter, error)
 	//page
 	AddPage(uint, request.PageRequest) (models.Page, error)
 	GetPageChapter(int) ([]models.Page, error)
 	DeletePage(int) error
+	UpdatePage(int, request.PageRequest) (models.Page, error)
 }
 
 type BookRepositoryImpl struct {
@@ -38,6 +40,50 @@ func NewBookRepositoryImpl(Db *gorm.DB) BookRepository {
 	return &BookRepositoryImpl{
 		DB: Db,
 	}
+}
+
+func (b *BookRepositoryImpl) UpdateChapter(chapterId int, request request.BookChapterRequest) (models.Chapter, error) {
+	var chapter models.Chapter
+	err := b.DB.Where("id = ?", chapterId).First(&chapter).Error
+	if err != nil {
+		return models.Chapter{}, err
+	}
+	copier.Copy(&chapter, request)
+	err = b.DB.Save(&chapter).Error
+	if err != nil {
+		return models.Chapter{}, err
+	}
+	return chapter, nil
+}
+
+func (b *BookRepositoryImpl) UpdatePage(pageId int, request request.PageRequest) (models.Page, error) {
+	var page models.Page
+
+	// Tìm page theo ID
+	if err := b.DB.Where("id = ?", pageId).First(&page).Error; err != nil {
+		return models.Page{}, err // Trả về lỗi nếu không tìm thấy
+	}
+
+	// Cập nhật các trường cụ thể từ request
+	updates := map[string]interface{}{}
+	if request.Title != "" {
+		updates["title"] = request.Title
+	}
+	if request.Content != "" {
+		updates["content"] = request.Content
+	}
+
+	// Nếu không có gì để cập nhật
+	if len(updates) == 0 {
+		return page, nil
+	}
+
+	// Cập nhật dữ liệu
+	if err := b.DB.Model(&page).Updates(updates).Error; err != nil {
+		return models.Page{}, err
+	}
+
+	return page, nil
 }
 
 func (b *BookRepositoryImpl) DeleteChapter(chapterId int) error {
@@ -72,14 +118,75 @@ func (b *BookRepositoryImpl) UpdateBook(bookId int, request request.BookCreateRe
 	if err != nil {
 		return models.Book{}, err
 	}
-	err = copier.Copy(&book, request)
+
+	// Copy các trường cơ bản, không bao gồm CreatedBy
+	book.Title = request.Title
+	book.Description = request.Description
+	book.Slug = request.Slug
+	book.Restricted = request.Restricted
+	book.Price = request.Price
+
+	// Chỉ cập nhật ShelveID nếu được cung cấp trong request
+	if request.ShelveID > 0 {
+		// Kiểm tra xem kệ sách có tồn tại không
+		var shelve models.Shelve
+		err = b.DB.First(&shelve, request.ShelveID).Error
+		if err != nil {
+			return models.Book{}, fmt.Errorf("shelve not found: %w", err)
+		}
+		book.ShelveID = request.ShelveID
+	}
+
+	// Cập nhật tags
+	var tags []models.Tag
+	tagSet := make(map[string]struct{})
+	for _, tagReq := range request.Tags {
+		if tagReq.Name == "" {
+			continue
+		}
+		if _, exists := tagSet[tagReq.Name]; exists {
+			continue
+		}
+		tagSet[tagReq.Name] = struct{}{}
+
+		existingTag, err := b.FindTagByName(tagReq.Name, "book")
+		if err != nil {
+			return models.Book{}, fmt.Errorf("failed to find tag: %w", err)
+		}
+
+		if existingTag == nil {
+			tags = append(tags, models.Tag{
+				EntityType: "book",
+				Name:       tagReq.Name,
+				Value:      tagReq.Value,
+			})
+		} else {
+			tags = append(tags, *existingTag)
+		}
+	}
+	book.Tags = tags
+
+	// Lưu sách với các trường đã cập nhật
+	err = b.DB.Model(&book).Updates(map[string]interface{}{
+		"title":       book.Title,
+		"description": book.Description,
+		"slug":        book.Slug,
+		"restricted":  book.Restricted,
+		"price":       book.Price,
+		"shelve_id":   book.ShelveID,
+	}).Error
 	if err != nil {
 		return models.Book{}, err
 	}
-	err = b.DB.Save(&book).Error
-	if err != nil {
-		return models.Book{}, err
+
+	// Cập nhật EntityID cho các tag mới
+	for i := range tags {
+		if tags[i].EntityID == 0 {
+			tags[i].EntityID = book.ID
+			b.DB.Save(&tags[i])
+		}
 	}
+
 	return book, nil
 }
 

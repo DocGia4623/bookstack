@@ -8,6 +8,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/copier"
 )
 
 type UserController struct {
@@ -97,12 +98,23 @@ func (controller *UserController) UpdateUser(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, webResponse)
 		return
 	}
+	var userResponse response.UserResponse
+	err = copier.Copy(&userResponse, user)
+	if err != nil {
+		webResponse = response.WebResponse{
+			Code:    http.StatusInternalServerError,
+			Status:  "Fail",
+			Message: "Failed to update: " + err.Error(),
+		}
+		c.JSON(http.StatusInternalServerError, webResponse)
+		return
+	}
 
 	webResponse = response.WebResponse{
 		Code:    http.StatusOK,
 		Status:  "Success",
 		Message: "Update user successful",
-		Data:    user,
+		Data:    userResponse,
 	}
 	c.JSON(http.StatusOK, webResponse)
 }

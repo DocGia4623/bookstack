@@ -207,7 +207,7 @@ func (controller *BookController) CreateBook(c *gin.Context) {
 // @Produce json
 // @Success 200 {object} response.WebResponse
 // @Failure 500 {object} response.WebResponse
-// @Router /books [get]
+// @Router /book [get]
 func (controller *BookController) GetBooks(c *gin.Context) {
 	var webResponse response.WebResponse
 	books, err := controller.bookSerivce.GetAllBook()
@@ -674,6 +674,19 @@ func (controller *BookController) UpdateBook(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, webResponse)
 		return
 	}
+
+	// Bind request body
+	if err := c.ShouldBindJSON(&request); err != nil {
+		webResponse = response.WebResponse{
+			Code:    http.StatusBadRequest,
+			Status:  "error",
+			Message: "Invalid request body",
+			Data:    nil,
+		}
+		c.JSON(http.StatusBadRequest, webResponse)
+		return
+	}
+
 	book, err := controller.bookSerivce.UpdateBook(bookId, request)
 	if err != nil {
 		webResponse = response.WebResponse{
@@ -854,6 +867,103 @@ func (controller *BookController) DeletePage(c *gin.Context) {
 		Status:  "success",
 		Message: "page deleted",
 		Data:    nil,
+	}
+	c.JSON(http.StatusOK, webResponse)
+}
+
+// UpdateChapter godoc
+// @Summary Update a chapter
+// @Description Update a chapter by ID
+// @Tags Chapter
+// @Accept json
+// @Produce json
+// @Param chapterId path int true "Chapter ID"
+// @Param chapter body request.BookChapterRequest true "Chapter request body"
+// @Success 200 {object} response.WebResponse
+// @Failure 400 {object} response.WebResponse
+// @Failure 500 {object} response.WebResponse
+// @Router /chapters/{chapterId} [put]
+func (controller *BookController) UpdateChapter(c *gin.Context) {
+	var webResponse response.WebResponse
+	var request request.BookChapterRequest
+	chapterIdStr := c.Param("chapterId")
+	chapterId, err := strconv.Atoi(chapterIdStr)
+	if err != nil {
+		webResponse = response.WebResponse{
+			Code:    http.StatusBadRequest,
+			Status:  "error",
+			Message: "cant get chapterId",
+			Data:    nil,
+		}
+		c.JSON(http.StatusBadRequest, webResponse)
+		return
+	}
+
+	chapter, err := controller.bookSerivce.UpdateChapter(chapterId, request)
+	if err != nil {
+		webResponse = response.WebResponse{
+			Code:    http.StatusInternalServerError,
+			Status:  "error",
+			Message: "cant update chapter",
+			Data:    nil,
+		}
+		c.JSON(http.StatusInternalServerError, webResponse)
+		return
+	}
+	webResponse = response.WebResponse{
+		Code:    http.StatusOK,
+		Status:  "success",
+		Message: "chapter updated",
+		Data:    chapter,
+	}
+	c.JSON(http.StatusOK, webResponse)
+}
+
+// UpdatePage godoc
+// @Summary Update a page
+// @Description Update a page by ID
+// @Tags Page
+// @Accept json
+// @Produce json
+// @Param pageId path int true "Page ID"
+// @Param page body request.PageRequest true "Page request body"
+// @Success 200 {object} response.WebResponse
+// @Failure 400 {object} response.WebResponse
+// @Failure 500 {object} response.WebResponse
+// @Router /chapter/{chapterId}/page/{pageId} [put]
+
+func (controller *BookController) UpdatePage(c *gin.Context) {
+	var webResponse response.WebResponse
+	var request request.PageRequest
+	pageIdStr := c.Param("pageId")
+	pageId, err := strconv.Atoi(pageIdStr)
+	if err != nil {
+		webResponse = response.WebResponse{
+			Code:    http.StatusBadRequest,
+			Status:  "error",
+			Message: "cant get pageId",
+			Data:    nil,
+		}
+		c.JSON(http.StatusBadRequest, webResponse)
+		return
+	}
+
+	page, err := controller.bookSerivce.UpdatePage(pageId, request)
+	if err != nil {
+		webResponse = response.WebResponse{
+			Code:    http.StatusInternalServerError,
+			Status:  "error",
+			Message: "cant update page",
+			Data:    nil,
+		}
+		c.JSON(http.StatusInternalServerError, webResponse)
+		return
+	}
+	webResponse = response.WebResponse{
+		Code:    http.StatusOK,
+		Status:  "success",
+		Message: "page updated",
+		Data:    page,
 	}
 	c.JSON(http.StatusOK, webResponse)
 }

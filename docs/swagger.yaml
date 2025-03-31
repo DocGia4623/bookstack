@@ -67,11 +67,17 @@ definitions:
     type: object
   request.OrderRequest:
     properties:
+      address:
+        description: Địa chỉ giao hàng
+        type: string
       order_details:
         description: Danh sách sách trong đơn
         items:
           $ref: '#/definitions/request.OrderDetailRequest'
         type: array
+      phone:
+        description: Số điện thoại
+        type: string
       user_id:
         description: Người đặt hàng
         type: integer
@@ -274,7 +280,7 @@ paths:
       summary: Register a new user
       tags:
       - Authentication
-  /books:
+  /book:
     get:
       description: Retrieve all books available in the system
       produces:
@@ -291,6 +297,7 @@ paths:
       summary: Get all books
       tags:
       - Book
+  /books:
     post:
       consumes:
       - application/json
