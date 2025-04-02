@@ -5,11 +5,12 @@ type OrderResponse struct {
 	UserID      uint                  `json:"user_id"`
 	Status      string                `json:"status"`
 	TotalPrice  float64               `json:"total_price"`
+	Address     string                `json:"address"` // Địa chỉ giao hàng
+	Phone       string                `json:"phone"`   // Số điện thoại
+	ShiperID    uint                  `json:"shiper_id"`
 	OrderDetail []OrderDetailResponse `json:"order_detail"`
 	CreatedAt   string                `json:"created_at"`
 	UpdatedAt   string                `json:"updated_at"`
-	Address     string                `json:"address"` // Địa chỉ giao hàng
-	Phone       string                `json:"phone"`   // Số điện thoại
 }
 
 type OrderDetailResponse struct {

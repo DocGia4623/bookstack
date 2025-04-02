@@ -27,6 +27,7 @@ func SeedRolesAndPermissions() {
 		{Name: "admin"},
 		{Name: "editor"},
 		{Name: "viewer"},
+		{Name: "shipper"},
 	}
 
 	for _, role := range roles {

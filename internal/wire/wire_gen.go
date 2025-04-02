@@ -34,7 +34,7 @@ func InitializeApp() (*App, error) {
 	bookController := controller.NewBookController(bookService, userService)
 	orderRepository := repository.NewOrderRepositoryImpl(db)
 	orderService := service.NewOrderServiceImpl(orderRepository)
-	orderController := controller.NewOrderController(orderService)
+	orderController := controller.NewOrderController(orderService, userService)
 	permissionRepository := repository.NewPermissionRepositoryImpl(db)
 	middlewareMiddleware := middleware.NewAuthorizeMiddleware(userRepository, permissionRepository, configConfig)
 	app := &App{

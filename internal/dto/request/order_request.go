@@ -6,7 +6,6 @@ type OrderDetailRequest struct {
 }
 
 type OrderRequest struct {
-	UserID       uint                 `json:"user_id" binding:"required"`       // Người đặt hàng
 	OrderDetails []OrderDetailRequest `json:"order_details" binding:"required"` // Danh sách sách trong đơn
 	Address      string               `json:"address"`                          // Địa chỉ giao hàng
 	Phone        string               `json:"phone"`                            // Số điện thoại

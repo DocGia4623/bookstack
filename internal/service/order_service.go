@@ -7,7 +7,7 @@ import (
 )
 
 type OrderService interface {
-	CreateOrder(request.OrderRequest) (models.Order, error)
+	CreateOrder(request.OrderRequest, int) (models.Order, error)
 	CancelOrder(int) error
 	GetOrder(userID int) (models.Order, error)
 	GetUserOrder(orderId int) ([]models.Order, error)
@@ -31,8 +31,8 @@ func (o *OrderServiceImpl) GetOrder(orderId int) (models.Order, error) {
 	return o.repo.GetOrder(orderId)
 }
 
-func (o *OrderServiceImpl) CreateOrder(request request.OrderRequest) (models.Order, error) {
-	return o.repo.CreateOrder(request)
+func (o *OrderServiceImpl) CreateOrder(request request.OrderRequest, userId int) (models.Order, error) {
+	return o.repo.CreateOrder(request, userId)
 }
 
 func (o *OrderServiceImpl) CancelOrder(orderId int) error {

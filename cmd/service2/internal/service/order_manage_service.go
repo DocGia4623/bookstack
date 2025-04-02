@@ -1,21 +1,55 @@
 package service
 
-import "bookstack/internal/repository"
+import (
+	"bookstack/cmd/service2/internal/repository"
+	"bookstack/internal/constant"
+	"bookstack/internal/models"
+)
 
-type OrderManageService interface {
-	ManageShiper(orderID uint) error
+type ShipperOrderManageService interface {
+	// Quản lý shipper
+	GetAllShipper(string) ([]models.User, error)
+
+	// Quản lý đơn hàng của shipper
+	AssignOrderToShipper(orderID uint, shipperID uint) error
+	GetOrdersByShipper(shipperID uint) ([]models.Order, error)
+	UpdateOrderStatus(orderID uint, status constant.OrderStatus) error
+	GetPendingOrders() ([]models.Order, error)
+	GetOrderInRange(string) ([]models.Order, error)
 }
 
-type orderManageService struct {
-	orderRepository repository.OrderRepository
+type shipperOrderManageService struct {
+	ShipperRepository repository.ShipperRepository
 }
 
-func NewOrderManageService(orderRepository repository.OrderRepository) OrderManageService {
-	return &orderManageService{
-		orderRepository: orderRepository,
+func NewOrderManageService(shipperRepository repository.ShipperRepository) ShipperOrderManageService {
+	return &shipperOrderManageService{
+		ShipperRepository: shipperRepository,
 	}
 }
 
-func (s *orderManageService) ManageShiper(orderID uint) error {
-	return nil
+func (s *shipperOrderManageService) GetOrderInRange(place string) ([]models.Order, error) {
+	return s.ShipperRepository.GetOrderInRange(place)
+}
+
+// Quản lý shipper
+func (s *shipperOrderManageService) GetAllShipper(roleName string) ([]models.User, error) {
+	return s.ShipperRepository.GetAllShipper(roleName)
+}
+
+// Quản lý đơn hàng của shipper
+func (s *shipperOrderManageService) AssignOrderToShipper(orderID uint, shipperID uint) error {
+	return s.ShipperRepository.AssignOrderToShipper(orderID, shipperID)
+}
+
+func (s *shipperOrderManageService) GetOrdersByShipper(shipperID uint) ([]models.Order, error) {
+	return s.ShipperRepository.GetOrdersByShipper(shipperID)
+}
+
+func (s *shipperOrderManageService) UpdateOrderStatus(orderID uint, status constant.OrderStatus) error {
+	return s.ShipperRepository.UpdateOrderStatus(orderID, status)
+}
+
+func (s *shipperOrderManageService) GetPendingOrders() ([]models.Order, error) {
+	return s.ShipperRepository.GetPendingOrders()
 }

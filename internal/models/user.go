@@ -9,10 +9,14 @@ type User struct {
 	Email          string       `json:"email"`
 	Password       string       `json:"password"`
 	RememberToken  string       `json:"remember_token"`
+	WorkingArea    string       `json:"working_area"`
+	Phone          string       `json:"phone"`
 	EmailConfirmed bool         `json:"email_confirmed"`
 	ImageId        int          `json:"image_id"`
 	Roles          []Role       `gorm:"many2many:user_roles"`
 	RefreshToken   RefreshToken `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`
+	Orders         []Order      `gorm:"foreignKey:UserID;references:ID" json:"orders"`
+	ShipperOrders  []Order      `gorm:"foreignKey:ShipperID;references:ID" json:"shipper_orders"`
 }
 
 // Role struct

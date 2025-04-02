@@ -90,12 +90,15 @@ type Comment struct {
 // Order - Đơn hàng
 type Order struct {
 	gorm.Model
-	UserID      uint                 `json:"user_id"`       // Người đặt hàng
-	TotalPrice  float64              `json:"total_price"`   // Tổng giá trị đơn hàng
-	Status      constant.OrderStatus `json:"status"`        // Trạng thái đơn hàng: pending, completed, cancelled
-	OrderDetail []OrderDetail        `json:"order_details"` // Danh sách sách trong đơn
-	Address     string               `json:"address"`       // Địa chỉ giao hàng
-	Phone       string               `json:"phone"`         // Số điện thoại liên hệ
+	UserID      uint                 `gorm:"not null" json:"user_id"`
+	User        User                 `gorm:"foreignKey:UserID" json:"user"`
+	ShipperID   *uint                `json:"shipper_id"` // Thay đổi thành con trỏ để cho phép null
+	Shipper     *User                `gorm:"foreignKey:ShipperID" json:"shipper,omitempty"`
+	TotalPrice  float64              `gorm:"type:decimal(10,2)" json:"total_price"`
+	Status      constant.OrderStatus `gorm:"type:int" json:"status"`
+	OrderDetail []OrderDetail        `gorm:"foreignKey:OrderID" json:"order_details"`
+	Address     string               `gorm:"type:varchar(255)" json:"address"`
+	Phone       string               `gorm:"type:varchar(20)" json:"phone"`
 }
 
 // OrderDetail - Chi tiết đơn hàng

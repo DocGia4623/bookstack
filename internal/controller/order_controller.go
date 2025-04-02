@@ -15,12 +15,14 @@ import (
 )
 
 type OrderController struct {
-	service service.OrderService
+	service     service.OrderService
+	userService service.UserService
 }
 
-func NewOrderController(serv service.OrderService) *OrderController {
+func NewOrderController(serv service.OrderService, userService service.UserService) *OrderController {
 	return &OrderController{
-		service: serv,
+		service:     serv,
+		userService: userService,
 	}
 }
 
@@ -39,22 +41,34 @@ func (controller *OrderController) CreateOrder(c *gin.Context) {
 	var webResponse response.WebResponse
 	var request request.OrderRequest
 
-	if err := c.ShouldBindJSON(&request); err != nil {
+	header := c.Request.Header.Get("Authorization")
+	userId, err := controller.userService.GetUserIdByToken(header)
+	if err != nil {
 		webResponse = response.WebResponse{
 			Code:    http.StatusBadRequest,
 			Status:  "error",
-			Message: "invalid request",
+			Message: "no token found",
 			Data:    nil,
 		}
 		c.JSON(http.StatusBadRequest, webResponse)
 		return
 	}
-	order, err := controller.service.CreateOrder(request)
+	if err := c.ShouldBindJSON(&request); err != nil {
+		webResponse = response.WebResponse{
+			Code:    http.StatusBadRequest,
+			Status:  "error",
+			Message: "invalid request" + err.Error(),
+			Data:    err,
+		}
+		c.JSON(http.StatusBadRequest, webResponse)
+		return
+	}
+	order, err := controller.service.CreateOrder(request, userId)
 	if err != nil {
 		webResponse = response.WebResponse{
 			Code:    http.StatusInternalServerError,
 			Status:  "error",
-			Message: "Server error",
+			Message: "Server error" + err.Error(),
 			Data:    nil,
 		}
 		c.JSON(http.StatusInternalServerError, webResponse)

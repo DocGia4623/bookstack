@@ -12,7 +12,7 @@ import (
 )
 
 type OrderRepository interface {
-	CreateOrder(request.OrderRequest) (models.Order, error)
+	CreateOrder(request.OrderRequest, int) (models.Order, error)
 	GetOrder(int) (models.Order, error)
 	GetUserOrder(int) ([]models.Order, error)
 	CancelOrder(int) error
@@ -56,7 +56,7 @@ func (o *OrderRepositoryImpl) GetBookPrice(bookId int) (float64, error) {
 	return book.Price, err
 }
 
-func (o *OrderRepositoryImpl) CreateOrder(request request.OrderRequest) (models.Order, error) {
+func (o *OrderRepositoryImpl) CreateOrder(request request.OrderRequest, userId int) (models.Order, error) {
 	var order models.Order
 	var totalPrice float64
 
@@ -69,6 +69,7 @@ func (o *OrderRepositoryImpl) CreateOrder(request request.OrderRequest) (models.
 	// Copy các trường không được copy tự động
 	order.Address = request.Address
 	order.Phone = request.Phone
+	order.UserID = uint(userId)
 
 	// Chuyển đổi OrderDetailRequest thành OrderDetail
 	var orderDetails []models.OrderDetail

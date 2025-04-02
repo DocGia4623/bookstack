@@ -55,5 +55,5 @@ func main() {
 
 	// Run server
 	router.Run(":8080")
-	fmt.Println("Server 1 is running on port 8080")
+	fmt.Println("Server main is running on port 8080")
 }
