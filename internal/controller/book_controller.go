@@ -447,6 +447,16 @@ func (controller *BookController) GetPages(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, webResponse)
 		return
 	}
+	if len(pages) == 0 {
+		webResponse = response.WebResponse{
+			Code:    http.StatusOK,
+			Status:  "success",
+			Message: "No pages",
+			Data:    nil,
+		}
+		c.JSON(http.StatusOK, webResponse)
+		return
+	}
 	// Trả về danh sách Trang
 	webResponse = response.WebResponse{
 		Code:    http.StatusOK,
@@ -501,7 +511,7 @@ func (controller *BookController) CreateCompleteBook(c *gin.Context) {
 			Code:    http.StatusBadRequest,
 			Status:  "error",
 			Message: "Invalid request",
-			Data:    nil,
+			Data:    err.Error(),
 		}
 		c.JSON(http.StatusBadRequest, webResponse)
 		return
@@ -572,6 +582,21 @@ func (controller *BookController) GetShelves(c *gin.Context) {
 		return
 	}
 
+	for i, shelf := range shelves {
+		user, err := controller.userService.GetUserById(int(shelf.CreatedBy))
+		if err != nil {
+			webResponse = response.WebResponse{
+				Code:    http.StatusInternalServerError,
+				Status:  "error",
+				Message: "Server error" + err.Error(),
+				Data:    nil,
+			}
+			c.JSON(http.StatusInternalServerError, webResponse)
+			return
+		}
+		shelveResponses[i].CreatedBy = user.FullName
+	}
+
 	for _, shelveResponse := range shelveResponses {
 		var tags []response.TagResponse
 		var tagResponse response.TagResponse
@@ -589,6 +614,7 @@ func (controller *BookController) GetShelves(c *gin.Context) {
 				return
 			}
 			tags = append(tags, tagResponse)
+
 		}
 
 		shelveResponse.Tags = tags

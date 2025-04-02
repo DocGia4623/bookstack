@@ -5,6 +5,7 @@ import (
 	"bookstack/internal/repository"
 	"bookstack/internal/wire"
 	"bookstack/routes"
+	"fmt"
 	"log"
 
 	_ "bookstack/docs" // Import tài liệu Swagger đã được tạo
@@ -54,4 +55,5 @@ func main() {
 
 	// Run server
 	router.Run(":8080")
+	fmt.Println("Server 1 is running on port 8080")
 }

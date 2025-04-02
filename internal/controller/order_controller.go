@@ -66,6 +66,8 @@ func (controller *OrderController) CreateOrder(c *gin.Context) {
 	orderResponse.OrderID = order.ID
 	orderResponse.UserID = order.UserID
 	orderResponse.TotalPrice = order.TotalPrice
+	orderResponse.Address = order.Address
+	orderResponse.Phone = order.Phone
 	orderResponse.CreatedAt = order.CreatedAt.Format("2006-01-02 15:04:05")
 	orderResponse.UpdatedAt = order.UpdatedAt.Format("2006-01-02 15:04:05")
 

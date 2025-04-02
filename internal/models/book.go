@@ -15,8 +15,8 @@ type Book struct {
 	Slug        string    `json:"slug"`        // Đường dẫn thân thiện
 	ShelveID    uint      `json:"shelve_id"`   // Khóa ngoại liên kết đến Shelf
 	Shelve      Shelve    `gorm:"foreignKey:ShelveID"`
-	Chapters    []Chapter `gorm:"foreignKey:BookID" json:"chapters"`                    // Danh sách chương của sách
-	Tags        []Tag     `gorm:"polymorphic:Entity;polymorphicValue:book" json:"tags"` // Tags liên kết với sách
+	Chapters    []Chapter `gorm:"foreignKey:BookID;constraint:OnDelete:CASCADE" json:"chapters"` // Danh sách chương của sách
+	Tags        []Tag     `gorm:"polymorphic:Entity;polymorphicValue:book" json:"tags"`          // Tags liên kết với sách
 	Comments    []Comment `gorm:"polymorphic:Entity;polymorphicValue:book" json:"comments"`
 	Restricted  bool      `json:"restricted"` // Trường kiểm soát quyền truy cập
 	CreatedBy   uint      `json:"created_by"` // ID của người tạo sách
@@ -26,11 +26,11 @@ type Book struct {
 // Chapter đại diện cho chương của một cuốn sách
 type Chapter struct {
 	gorm.Model
-	Title      string `json:"title"`      // Tiêu đề chương
-	Order      int    `json:"order"`      // Thứ tự sắp xếp chương
-	BookID     uint   `json:"book_id"`    // Khóa ngoại liên kết đến Book
-	Pages      []Page `json:"pages"`      // Danh sách trang của chương
-	Restricted bool   `json:"restricted"` // Quyền truy cập chương
+	Title      string `json:"title"`                                                         // Tiêu đề chương
+	Order      int    `json:"order"`                                                         // Thứ tự sắp xếp chương
+	BookID     uint   `json:"book_id"`                                                       // Khóa ngoại liên kết đến Book
+	Pages      []Page `gorm:"foreignKey:ChapterID;constraint:OnDelete:CASCADE" json:"pages"` // Danh sách trang của chương
+	Restricted bool   `json:"restricted"`                                                    // Quyền truy cập chương
 }
 
 // Page đại diện cho trang trong một chương hoặc sách
