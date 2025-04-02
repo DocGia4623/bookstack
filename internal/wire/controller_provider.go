@@ -11,4 +11,5 @@ var ControllerSet = wire.NewSet(
 	controller.NewUserController,
 	controller.NewBookController,
 	controller.NewOrderController,
+	controller.NewShipperController,
 )

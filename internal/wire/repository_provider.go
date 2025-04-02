@@ -11,4 +11,5 @@ var RepositorySet = wire.NewSet(
 	repository.NewPermissionRepositoryImpl,
 	repository.NewBookRepositoryImpl,
 	repository.NewOrderRepositoryImpl,
+	repository.NewShipperRepository,
 )

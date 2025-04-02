@@ -16,9 +16,16 @@ func SeedRolesAndPermissions() {
 		{Name: constant.ReadUser},
 		{Name: constant.WriteUser},
 		{Name: constant.DeleteUser},
+		{Name: constant.ReceiveOrder},
+		{Name: constant.UpdateOrderStatus},
 	}
+
+	// Tạo permissions
 	for _, perm := range permissions {
-		db.FirstOrCreate(&perm, models.Permission{Name: perm.Name})
+		var existingPerm models.Permission
+		if err := db.Where("name = ?", perm.Name).First(&existingPerm).Error; err != nil {
+			db.Create(&perm)
+		}
 	}
 
 	// Define roles
@@ -30,24 +37,44 @@ func SeedRolesAndPermissions() {
 		{Name: "shipper"},
 	}
 
+	// Tạo roles
 	for _, role := range roles {
-		db.FirstOrCreate(&role, models.Role{Name: role.Name})
+		var existingRole models.Role
+		if err := db.Where("name = ?", role.Name).First(&existingRole).Error; err != nil {
+			db.Create(&role)
+		}
 	}
 
-	var dbPermissions []models.Permission
+	// Lấy permissions cho admin
+	var adminPermissions []models.Permission
 	db.Where("name IN ?", []string{
 		constant.ReadUser,
 		constant.WriteUser,
 		constant.DeleteUser,
-	}).Find(&dbPermissions)
+	}).Find(&adminPermissions)
 
-	// Assign permissions to roles (Admin gets all)
+	// Lấy permissions cho shipper
+	var shipperPermissions []models.Permission
+	db.Where("name IN ?", []string{
+		constant.ReceiveOrder,
+	}).Find(&shipperPermissions)
+
+	// Assign permissions to admin role
 	var adminRole models.Role
 	if err := db.First(&adminRole, "name = ?", "admin").Error; err == nil {
-		// Kiểm tra nếu chưa có quan hệ thì mới Append
-		if err := db.Model(&adminRole).Association("Permissions").Error; err == nil {
-			db.Model(&adminRole).Association("Permissions").Append(dbPermissions)
-		}
+		// Xóa tất cả permissions cũ
+		db.Model(&adminRole).Association("Permissions").Clear()
+		// Thêm permissions mới
+		db.Model(&adminRole).Association("Permissions").Append(adminPermissions)
+	}
+
+	// Assign permissions to shipper role
+	var shipperRole models.Role
+	if err := db.First(&shipperRole, "name = ?", "shipper").Error; err == nil {
+		// Xóa tất cả permissions cũ
+		db.Model(&shipperRole).Association("Permissions").Clear()
+		// Thêm permissions mới
+		db.Model(&shipperRole).Association("Permissions").Append(shipperPermissions)
 	}
 
 	log.Println("Seeded roles and permissions")

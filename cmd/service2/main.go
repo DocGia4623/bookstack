@@ -2,7 +2,7 @@ package main
 
 import (
 	"bookstack/cmd/service2/routes"
-	"bookstack/cmd/service2/wire"
+	"bookstack/internal/wire"
 	"log"
 
 	"github.com/gin-gonic/gin"
@@ -17,6 +17,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to initialize app: %v", err)
 	}
-	routes.ShipperRoutes(router, app.ShipperController)
+	routes.ShipperRoutes(router, app.Middleware, app.ShipperController)
 	router.Run(":8081")
 }

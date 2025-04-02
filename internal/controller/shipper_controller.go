@@ -1,10 +1,10 @@
 package controller
 
 import (
-	"bookstack/cmd/service2/internal/service"
 	"bookstack/internal/constant"
 	"bookstack/internal/dto/response"
 	"bookstack/internal/models"
+	"bookstack/internal/service"
 	"net/http"
 	"strconv"
 

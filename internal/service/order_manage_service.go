@@ -1,9 +1,9 @@
 package service
 
 import (
-	"bookstack/cmd/service2/internal/repository"
 	"bookstack/internal/constant"
 	"bookstack/internal/models"
+	"bookstack/internal/repository"
 )
 
 type ShipperOrderManageService interface {

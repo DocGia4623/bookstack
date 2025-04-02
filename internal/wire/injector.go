@@ -27,6 +27,7 @@ type App struct {
 	BookController           *controller.BookController
 	OrderController          *controller.OrderController
 	Middleware               *middleware.Middleware
+	ShipperController        *controller.ShipperController
 }
 
 // InitializeUserService khởi tạo UserService tự động
