@@ -14,6 +14,7 @@ import (
 var AppSet = wire.NewSet(
 	config.LoadConfig,
 	config.ConnectDB,
+	config.ConnectRedis,
 	RepositorySet,
 	MiddlerwareSet, // Inject Middleware
 	ServiceSet,

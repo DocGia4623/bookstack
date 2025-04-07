@@ -3,6 +3,7 @@ package controller
 import (
 	"bookstack/internal/dto/request"
 	"bookstack/internal/dto/response"
+	"bookstack/internal/models"
 	"bookstack/internal/service"
 	"net/http"
 	"strconv"
@@ -42,13 +43,25 @@ func (controller *UserController) GetAllUser(context *gin.Context) {
 		context.JSON(http.StatusInternalServerError, webResponse)
 		return
 	}
+	var userResponse []response.UserResponse
+	for _, user := range users {
+		userResponse = append(userResponse, controller.CoppyToUserResponse(user))
+	}
 	webResponse = response.WebResponse{
 		Code:    http.StatusOK,
 		Status:  "Success",
 		Message: "Get Users",
-		Data:    users,
+		Data:    userResponse,
 	}
 	context.JSON(http.StatusOK, webResponse)
+}
+
+func (controller *UserController) CoppyToUserResponse(user models.User) response.UserResponse {
+	var userResponse response.UserResponse
+	userResponse.ID = user.ID
+	userResponse.FullName = user.FullName
+	userResponse.Email = user.Email
+	return userResponse
 }
 
 // UpdateUser godoc

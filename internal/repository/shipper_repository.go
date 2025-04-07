@@ -16,6 +16,8 @@ type ShipperRepository interface {
 	GetOrdersByShipper(shipperID uint) ([]models.Order, error)
 	UpdateOrderStatus(orderID uint, status constant.OrderStatus) error
 	GetPendingOrders() ([]models.Order, error)
+	ReceiveOrder(orderId int, userId int) error
+	GetReceivedOrders(userId int) ([]models.Order, error)
 }
 
 type shipperRepository struct {
@@ -24,6 +26,18 @@ type shipperRepository struct {
 
 func NewShipperRepository(db *gorm.DB) ShipperRepository {
 	return &shipperRepository{db: db}
+}
+
+func (r *shipperRepository) GetReceivedOrders(userId int) ([]models.Order, error) {
+	var orders []models.Order
+	if err := r.db.Where("shipper_id = ?", userId).Find(&orders).Error; err != nil {
+		return nil, err
+	}
+	return orders, nil
+}
+
+func (r *shipperRepository) ReceiveOrder(orderId int, userId int) error {
+	return r.db.Model(&models.Order{}).Where("id = ?", orderId).Update("shipper_id", userId).Error
 }
 
 func (r *shipperRepository) GetOrderInRange(place string) ([]models.Order, error) {

@@ -39,7 +39,7 @@ func InitializeApp() (*App, error) {
 	middlewareMiddleware := middleware.NewAuthorizeMiddleware(userRepository, permissionRepository, configConfig)
 	shipperRepository := repository.NewShipperRepository(db)
 	shipperOrderManageService := service.NewOrderManageService(shipperRepository)
-	shipperController := controller.NewShipperController(shipperOrderManageService)
+	shipperController := controller.NewShipperController(shipperOrderManageService, userService)
 	app := &App{
 		AuthenticationController: authenticationController,
 		UserController:           userController,
@@ -53,7 +53,7 @@ func InitializeApp() (*App, error) {
 
 // injector.go:
 
-var AppSet = wire.NewSet(config.LoadConfig, config.ConnectDB, RepositorySet,
+var AppSet = wire.NewSet(config.LoadConfig, config.ConnectDB, config.ConnectRedis, RepositorySet,
 	MiddlerwareSet,
 	ServiceSet,
 	ControllerSet, wire.Struct(new(App), "*"),

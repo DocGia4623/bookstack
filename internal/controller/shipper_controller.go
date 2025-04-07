@@ -1,10 +1,13 @@
 package controller
 
 import (
+	"bookstack/config"
 	"bookstack/internal/constant"
 	"bookstack/internal/dto/response"
+	"bookstack/internal/messaging"
 	"bookstack/internal/models"
 	"bookstack/internal/service"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -13,10 +16,97 @@ import (
 
 type ShipperController struct {
 	ShipperOrderManageService service.ShipperOrderManageService
+	UserService               service.UserService
 }
 
-func NewShipperController(shipperOrderManageService service.ShipperOrderManageService) *ShipperController {
-	return &ShipperController{ShipperOrderManageService: shipperOrderManageService}
+func NewShipperController(shipperOrderManageService service.ShipperOrderManageService, userService service.UserService) *ShipperController {
+	return &ShipperController{ShipperOrderManageService: shipperOrderManageService, UserService: userService}
+}
+
+func (c *ShipperController) GetReceivedOrders(ctx *gin.Context) {
+	var webResponse response.WebResponse
+	header := ctx.Request.Header
+	token := header.Get("Authorization")
+	userId, err := c.UserService.GetUserIdByToken(token)
+	if err != nil {
+		webResponse = response.WebResponse{
+			Code:    http.StatusUnauthorized,
+			Status:  "error",
+			Message: "Unauthorized",
+			Data:    nil,
+		}
+		ctx.JSON(http.StatusUnauthorized, webResponse)
+		return
+	}
+	orders, err := c.ShipperOrderManageService.GetReceivedOrders(userId)
+	if err != nil {
+		webResponse = response.WebResponse{
+			Code:    http.StatusInternalServerError,
+			Status:  "error",
+			Message: err.Error(),
+			Data:    nil,
+		}
+		ctx.JSON(http.StatusInternalServerError, webResponse)
+		return
+	}
+	var orderResponse []response.OrderResponse
+	for _, order := range orders {
+		orderResponse = append(orderResponse, c.CoppyToOrderResponse(order))
+	}
+	webResponse = response.WebResponse{
+		Code:    http.StatusOK,
+		Status:  "success",
+		Message: "Success",
+		Data:    orderResponse,
+	}
+	ctx.JSON(http.StatusOK, webResponse)
+}
+func (c *ShipperController) ReceiveOrder(ctx *gin.Context) {
+	webResponse := response.WebResponse{}
+	orderIdStr := ctx.Param("orderId")
+	orderId, err := strconv.Atoi(orderIdStr)
+	if err != nil {
+		webResponse = response.WebResponse{
+			Code:    http.StatusBadRequest,
+			Status:  "error",
+			Message: "Invalid order ID format",
+			Data:    nil,
+		}
+		ctx.JSON(http.StatusBadRequest, webResponse)
+		return
+	}
+	header := ctx.Request.Header
+	token := header.Get("Authorization")
+	userId, err := c.UserService.GetUserIdByToken(token)
+	if err != nil {
+		webResponse = response.WebResponse{
+			Code:    http.StatusUnauthorized,
+			Status:  "error",
+			Message: "Unauthorized",
+			Data:    nil,
+		}
+		ctx.JSON(http.StatusUnauthorized, webResponse)
+		return
+	}
+	err = c.ShipperOrderManageService.ReceiveOrder(orderId, userId)
+	if err != nil {
+		webResponse = response.WebResponse{
+			Code:    http.StatusInternalServerError,
+			Status:  "error",
+			Message: err.Error(),
+			Data:    nil,
+		}
+		ctx.JSON(http.StatusInternalServerError, webResponse)
+		return
+	}
+
+	webResponse = response.WebResponse{
+		Code:    http.StatusOK,
+		Status:  "success",
+		Message: "Order received successfully",
+		Data:    nil,
+	}
+	ctx.JSON(http.StatusOK, webResponse)
 }
 
 func (c *ShipperController) GetAllShipper(ctx *gin.Context) {
@@ -31,11 +121,14 @@ func (c *ShipperController) GetAllShipper(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, webResponse)
 		return
 	}
-
+	var userResponse []response.UserResponse
+	for _, shipper := range shippers {
+		userResponse = append(userResponse, c.CoppyToUserResponse(shipper))
+	}
 	webResponse = response.WebResponse{
 		Code:    http.StatusOK,
 		Message: "Success",
-		Data:    shippers,
+		Data:    userResponse,
 	}
 	ctx.JSON(http.StatusOK, webResponse)
 }
@@ -78,6 +171,14 @@ func (c *ShipperController) GetOrderInRange(ctx *gin.Context) {
 		Data:    orderResponse,
 	}
 	ctx.JSON(http.StatusOK, webResponse)
+}
+
+func (controller *ShipperController) CoppyToUserResponse(user models.User) response.UserResponse {
+	var userResponse response.UserResponse
+	userResponse.ID = user.ID
+	userResponse.FullName = user.FullName
+	userResponse.Email = user.Email
+	return userResponse
 }
 
 func (controller *ShipperController) CoppyToOrderResponse(order models.Order) response.OrderResponse {
@@ -131,4 +232,41 @@ func (controller *ShipperController) CoppyToOrderResponse(order models.Order) re
 	}
 
 	return orderResponse
+}
+
+func (controller *ShipperController) StartListeningForNewOrders() {
+	conf, err := config.LoadConfig()
+	if err != nil {
+		log.Printf("Failed to load config: %v", err)
+		return
+	}
+
+	rabbitmq, err := messaging.NewRabbitMQ(conf)
+	if err != nil {
+		log.Printf("Failed to connect to RabbitMQ: %v", err)
+		return
+	}
+
+	err = rabbitmq.ConsumeNewOrders(func(orderID uint, address string) {
+		log.Printf("Processing new order: ID=%d, Address=%s", orderID, address)
+
+		// Get all shippers
+		shippers, err := controller.ShipperOrderManageService.GetAllShipper("shipper")
+		if err != nil {
+			log.Printf("Failed to get shippers: %v", err)
+			return
+		}
+
+		// Find shippers in the same area
+		for _, shipper := range shippers {
+			if shipper.WorkingArea == address {
+				log.Printf("Found matching shipper: ID=%d, Area=%s", shipper.ID, shipper.WorkingArea)
+				// Here you can add logic to notify the shipper
+				// For example, send a notification or update a database
+			}
+		}
+	})
+	if err != nil {
+		log.Printf("Failed to start consuming new orders: %v", err)
+	}
 }

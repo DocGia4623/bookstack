@@ -5,6 +5,7 @@ import (
 	"bookstack/internal/constant"
 	"bookstack/internal/dto/request"
 	"bookstack/internal/dto/response"
+	"bookstack/internal/messaging"
 	"bookstack/internal/models"
 	"bookstack/internal/service"
 	"bookstack/utils"
@@ -12,6 +13,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 )
 
 type OrderController struct {
@@ -73,6 +75,22 @@ func (controller *OrderController) CreateOrder(c *gin.Context) {
 		}
 		c.JSON(http.StatusInternalServerError, webResponse)
 		return
+	}
+
+	// Publish new order notification to RabbitMQ
+	conf, err := config.LoadConfig()
+	if err != nil {
+		logrus.Printf("Failed to load config: %v", err)
+	} else {
+		rabbitmq, err := messaging.NewRabbitMQ(conf)
+		if err != nil {
+			logrus.Printf("Failed to connect to RabbitMQ: %v", err)
+		} else {
+			err = rabbitmq.PublishNewOrder(order.ID, order.Address)
+			if err != nil {
+				logrus.Printf("Failed to publish new order notification: %v", err)
+			}
+		}
 	}
 
 	var orderResponse response.OrderResponse

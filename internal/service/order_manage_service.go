@@ -16,6 +16,9 @@ type ShipperOrderManageService interface {
 	UpdateOrderStatus(orderID uint, status constant.OrderStatus) error
 	GetPendingOrders() ([]models.Order, error)
 	GetOrderInRange(string) ([]models.Order, error)
+	// Shipper nhận đơn hàng
+	ReceiveOrder(orderId int, userId int) error
+	GetReceivedOrders(userId int) ([]models.Order, error)
 }
 
 type shipperOrderManageService struct {
@@ -26,6 +29,14 @@ func NewOrderManageService(shipperRepository repository.ShipperRepository) Shipp
 	return &shipperOrderManageService{
 		ShipperRepository: shipperRepository,
 	}
+}
+
+func (s *shipperOrderManageService) GetReceivedOrders(userId int) ([]models.Order, error) {
+	return s.ShipperRepository.GetReceivedOrders(userId)
+}
+
+func (s *shipperOrderManageService) ReceiveOrder(orderId int, userId int) error {
+	return s.ShipperRepository.ReceiveOrder(orderId, userId)
 }
 
 func (s *shipperOrderManageService) GetOrderInRange(place string) ([]models.Order, error) {
