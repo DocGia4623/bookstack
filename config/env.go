@@ -31,6 +31,9 @@ type Config struct {
 	RabbitMQPort     string
 	RabbitMqUser     string
 	RabbitMQPassword string
+
+	PaypalClientID string
+	PaypalSecret   string
 }
 
 // Load Config tu file env
@@ -46,6 +49,7 @@ func LoadConfig() (*Config, error) {
 		"ACCESS_TOKEN_EXPIRATION", "ACCESS_TOKEN_SECRET",
 		"REDIS_HOST", "REDIS_PORT", "REDIS_DB",
 		"RABBITMQ_HOST", "RABBITMQ_PORT", "RABBITMQ_USER", "RABBITMQ_PASSWORD",
+		"PAYPAL_CLIENT_ID", "PAYPAL_SECRET",
 	}
 
 	for _, env := range requiredEnvVars {
@@ -93,5 +97,7 @@ func LoadConfig() (*Config, error) {
 		RabbitMQPort:          os.Getenv("RABBITMQ_PORT"),
 		RabbitMqUser:          os.Getenv("RABBITMQ_USER"),
 		RabbitMQPassword:      os.Getenv("RABBITMQ_PASSWORD"),
+		PaypalClientID:        os.Getenv("PAYPAL_CLIENT_ID"),
+		PaypalSecret:          os.Getenv("PAYPAL_SECRET"),
 	}, nil
 }

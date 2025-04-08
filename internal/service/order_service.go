@@ -4,6 +4,10 @@ import (
 	"bookstack/internal/dto/request"
 	"bookstack/internal/models"
 	"bookstack/internal/repository"
+	"context"
+	"strconv"
+
+	"github.com/plutov/paypal/v4"
 )
 
 type OrderService interface {
@@ -11,6 +15,7 @@ type OrderService interface {
 	CancelOrder(int) error
 	GetOrder(userID int) (models.Order, error)
 	GetUserOrder(orderId int) ([]models.Order, error)
+	CreatePaypalOrder(*paypal.Client, int) (*paypal.Order, error)
 }
 
 type OrderServiceImpl struct {
@@ -21,6 +26,26 @@ func NewOrderServiceImpl(repository repository.OrderRepository) OrderService {
 	return &OrderServiceImpl{
 		repo: repository,
 	}
+}
+
+func (o *OrderServiceImpl) CreatePaypalOrder(c *paypal.Client, orderId int) (*paypal.Order, error) {
+	order, err := o.repo.GetOrder(orderId)
+	if err != nil {
+		return nil, err
+	}
+
+	ord, err := c.CreateOrder(context.Background(), paypal.OrderIntentCapture, []paypal.PurchaseUnitRequest{
+		{
+			Amount: &paypal.PurchaseUnitAmount{
+				Currency: "USD",
+				Value:    strconv.FormatFloat(order.TotalPrice, 'f', -1, 64),
+			},
+		},
+	}, nil, nil)
+	if err != nil {
+		return nil, err
+	}
+	return ord, nil
 }
 
 func (o *OrderServiceImpl) GetUserOrder(userId int) ([]models.Order, error) {

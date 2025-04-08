@@ -28,6 +28,31 @@ func NewOrderController(serv service.OrderService, userService service.UserServi
 	}
 }
 
+func (controller *OrderController) CreatePaypalOrder(c *gin.Context) {
+	orderId := c.Param("orderId")
+	orderIdInt, err := strconv.Atoi(orderId)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid order ID"})
+		return
+	}
+	conf, err := config.LoadConfig()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load config"})
+		return
+	}
+	paypalClient, err := config.ConnectPaypal(conf)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to connect to PayPal"})
+		return
+	}
+	paypalOrder, err := controller.service.CreatePaypalOrder(paypalClient, orderIdInt)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create PayPal order" + err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"order": paypalOrder})
+}
+
 // CreateOrder godoc
 // @Summary Create a new order
 // @Description Create an order based on the provided request data

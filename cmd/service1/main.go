@@ -26,7 +26,6 @@ func main() {
 	if err != nil {
 		panic("failed to load config: " + err.Error())
 	}
-
 	// Connect to the database
 	config.Connect(conf)
 

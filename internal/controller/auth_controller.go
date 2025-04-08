@@ -70,18 +70,18 @@ func (controller *AuthenticationController) Register(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, webResponse)
 		return
 	}
-	// // Gửi email xác nhận
-	// err = utils.SendVerificationEmail(user.Email, user.FullName)
-	// if err != nil {
-	// 	webResponse = response.WebResponse{
-	// 		Code:    http.StatusInternalServerError,
-	// 		Status:  "error",
-	// 		Message: "User registered but failed to send verification email",
-	// 		Data:    nil,
-	// 	}
-	// 	c.JSON(http.StatusInternalServerError, webResponse)
-	// 	return
-	// }
+	// Gửi email xác nhận
+	err = utils.SendVerificationEmail(user.Email, user.FullName)
+	if err != nil {
+		webResponse = response.WebResponse{
+			Code:    http.StatusInternalServerError,
+			Status:  "error",
+			Message: "User registered but failed to send verification email",
+			Data:    nil,
+		}
+		c.JSON(http.StatusInternalServerError, webResponse)
+		return
+	}
 
 	webResponse = response.WebResponse{
 		Code:    http.StatusOK,

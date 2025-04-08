@@ -53,9 +53,9 @@ func (p *PermissionRepositoryImpl) CreatePermission(permissionRequest models.Per
 }
 func (p *PermissionRepositoryImpl) GetPermissions() ([]models.Permission, error) {
 	var permissions []models.Permission
-	err := p.DB.Find(&permissions)
-	if err != nil {
-		return nil, err.Error
+	result := p.DB.Find(&permissions)
+	if result.Error != nil {
+		return nil, result.Error
 	}
 	return permissions, nil
 }
