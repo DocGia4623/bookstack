@@ -26,6 +26,7 @@ type UserRepository interface {
 	FindByToken(token string) (*models.RefreshToken, error)
 	DeleteToken(token string) error
 	DeleteUserToken(userId int) error
+	GetUserEmail(userId int) (string, error)
 }
 
 type UserRepositoryImpl struct {
@@ -38,6 +39,15 @@ func NewUserRepositoryImpl(db *gorm.DB, conf *config.Config) UserRepository {
 		db:     db,
 		config: conf,
 	}
+}
+
+func (u *UserRepositoryImpl) GetUserEmail(userId int) (string, error) {
+	var user models.User
+	err := u.db.First(&user, userId).Error
+	if err != nil {
+		return "", err
+	}
+	return user.Email, nil
 }
 
 func (u *UserRepositoryImpl) DeleteUserToken(userId int) error {

@@ -28,6 +28,16 @@ func NewOrderController(serv service.OrderService, userService service.UserServi
 	}
 }
 
+// @Summary Create PayPal order
+// @Description Create a PayPal order for the specified order ID
+// @Tags orders
+// @Accept json
+// @Produce json
+// @Param orderId path int true "Order ID"
+// @Success 200 {object} gin.H "Successfully created PayPal order"
+// @Failure 400 {object} gin.H "Invalid order ID"
+// @Failure 500 {object} gin.H "Failed to create PayPal order"
+// @Router /order/{orderId}/paypal [post]
 func (controller *OrderController) CreatePaypalOrder(c *gin.Context) {
 	orderId := c.Param("orderId")
 	orderIdInt, err := strconv.Atoi(orderId)
@@ -80,6 +90,18 @@ func (controller *OrderController) CreateOrder(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, webResponse)
 		return
 	}
+	userEmail, err := controller.userService.GetUserEmail(userId)
+	if err != nil {
+		webResponse = response.WebResponse{
+			Code:    http.StatusBadRequest,
+			Status:  "error",
+			Message: "no user found",
+			Data:    nil,
+		}
+		c.JSON(http.StatusBadRequest, webResponse)
+		return
+	}
+
 	if err := c.ShouldBindJSON(&request); err != nil {
 		webResponse = response.WebResponse{
 			Code:    http.StatusBadRequest,
@@ -166,6 +188,7 @@ func (controller *OrderController) CreateOrder(c *gin.Context) {
 		orderResponse.OrderDetail = append(orderResponse.OrderDetail, orderDetailResponse)
 	}
 
+	utils.OrderNotificationEmail(userEmail, strconv.FormatUint(uint64(order.ID), 10))
 	webResponse = response.WebResponse{
 		Code:    http.StatusOK,
 		Status:  "Success",

@@ -23,6 +23,16 @@ func NewShipperController(shipperOrderManageService service.ShipperOrderManageSe
 	return &ShipperController{ShipperOrderManageService: shipperOrderManageService, UserService: userService}
 }
 
+// @Summary Get received orders for shipper
+// @Description Get all orders that have been received by the shipper
+// @Tags shipper
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Authorization token"
+// @Success 200 {object} response.WebResponse "Successfully retrieved orders"
+// @Failure 401 {object} response.WebResponse "Unauthorized"
+// @Failure 500 {object} response.WebResponse "Server error"
+// @Router /shippers/orders/received [get]
 func (c *ShipperController) GetReceivedOrders(ctx *gin.Context) {
 	var webResponse response.WebResponse
 	header := ctx.Request.Header
@@ -61,6 +71,19 @@ func (c *ShipperController) GetReceivedOrders(ctx *gin.Context) {
 	}
 	ctx.JSON(http.StatusOK, webResponse)
 }
+
+// @Summary Receive an order
+// @Description Mark an order as received by the shipper
+// @Tags shipper
+// @Accept json
+// @Produce json
+// @Param orderId path int true "Order ID"
+// @Param Authorization header string true "Authorization token"
+// @Success 200 {object} response.WebResponse "Order received successfully"
+// @Failure 400 {object} response.WebResponse "Invalid order ID"
+// @Failure 401 {object} response.WebResponse "Unauthorized"
+// @Failure 500 {object} response.WebResponse "Server error"
+// @Router /shippers/orders/{orderId}/receive [post]
 func (c *ShipperController) ReceiveOrder(ctx *gin.Context) {
 	webResponse := response.WebResponse{}
 	orderIdStr := ctx.Param("orderId")
@@ -109,6 +132,14 @@ func (c *ShipperController) ReceiveOrder(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, webResponse)
 }
 
+// @Summary Get all shippers
+// @Description Get a list of all shippers in the system
+// @Tags shipper
+// @Accept json
+// @Produce json
+// @Success 200 {object} response.WebResponse "Successfully retrieved shippers"
+// @Failure 500 {object} response.WebResponse "Server error"
+// @Router /shippers/list [get]
 func (c *ShipperController) GetAllShipper(ctx *gin.Context) {
 	var webResponse response.WebResponse
 
@@ -133,6 +164,16 @@ func (c *ShipperController) GetAllShipper(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, webResponse)
 }
 
+// @Summary Get orders in range
+// @Description Get orders that are within the shipper's working area
+// @Tags shipper
+// @Accept multipart/form-data
+// @Produce json
+// @Param place formData string true "Working area/place"
+// @Success 200 {object} response.WebResponse "Successfully retrieved orders"
+// @Failure 400 {object} response.WebResponse "Place is required"
+// @Failure 500 {object} response.WebResponse "Server error"
+// @Router /shippers/orders/in-range [get]
 func (c *ShipperController) GetOrderInRange(ctx *gin.Context) {
 	var webResponse response.WebResponse
 

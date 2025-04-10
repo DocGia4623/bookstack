@@ -19,6 +19,7 @@ type UserService interface {
 	GetUserByEmail(email string) (*models.User, error)
 	GetUserIdByToken(token string) (int, error)
 	GetUserById(int) (*models.User, error)
+	GetUserEmail(userId int) (string, error)
 }
 
 type UserServiceImpl struct {
@@ -29,6 +30,10 @@ func NewUserServiceImpl(repo repository.UserRepository) UserService {
 	return &UserServiceImpl{
 		repo: repo,
 	}
+}
+
+func (s *UserServiceImpl) GetUserEmail(userId int) (string, error) {
+	return s.repo.GetUserEmail(userId)
 }
 
 func (s *UserServiceImpl) GetUserById(userId int) (*models.User, error) {

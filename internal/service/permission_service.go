@@ -3,6 +3,7 @@ package service
 import (
 	"bookstack/internal/models"
 	"bookstack/internal/repository"
+	"errors"
 )
 
 type PermissionService interface {
@@ -21,11 +22,17 @@ func NewPermissionRepositoryImpl(permissionRepo repository.PermissionRepository)
 	}
 }
 func (p *PermissionRepositoryImpl) CreatePermission(request models.Permission) error {
+	if request.Name == "" {
+		return errors.New("permission name cannot be empty")
+	}
 	return p.repo.CreatePermission(request)
 }
 func (p *PermissionRepositoryImpl) GetPermissions() ([]models.Permission, error) {
 	return p.repo.GetPermissions()
 }
 func (p *PermissionRepositoryImpl) DeletePermission(permissionId int) error {
+	if permissionId == 0 {
+		return errors.New("invalid permission id")
+	}
 	return p.repo.DeletePermission(permissionId)
 }
