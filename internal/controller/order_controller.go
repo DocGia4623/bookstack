@@ -9,6 +9,7 @@ import (
 	"bookstack/internal/models"
 	"bookstack/internal/service"
 	"bookstack/utils"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -19,6 +20,52 @@ import (
 type OrderController struct {
 	service     service.OrderService
 	userService service.UserService
+}
+
+func (controller *OrderController) HandlePaypalWebhook(c *gin.Context) {
+	var webResponse response.WebResponse
+	var webhookPayload map[string]interface{}
+
+	// Đọc body yêu cầu POST
+	if err := c.ShouldBindJSON(&webhookPayload); err != nil {
+		webResponse = response.WebResponse{
+			Code:    http.StatusBadRequest,
+			Status:  "error",
+			Message: "invalid request: " + err.Error(),
+			Data:    nil,
+		}
+		c.JSON(http.StatusBadRequest, webResponse)
+		return
+	}
+
+	// Kiểm tra dữ liệu webhook trả về từ PayPal
+	eventType, ok := webhookPayload["event_type"].(string)
+	if !ok {
+		webResponse = response.WebResponse{
+			Code:    http.StatusBadRequest,
+			Status:  "error",
+			Message: "missing or invalid event_type",
+			Data:    nil,
+		}
+		c.JSON(http.StatusBadRequest, webResponse)
+		return
+	}
+
+	// Xử lý các loại sự kiện của PayPal
+	if eventType == "PAYMENT.SALE.COMPLETED" {
+		// Xử lý thanh toán đã hoàn tất
+		controller.service.UpdateOrderStatus(webhookPayload)
+		// Cập nhật trạng thái đơn hàng hoặc thực hiện các thao tác cần thiết
+		log.Printf("payment completed for order %v", webhookPayload)
+	}
+
+	webResponse = response.WebResponse{
+		Code:    http.StatusOK,
+		Status:  "Success",
+		Message: "Webhook Processed",
+		Data:    nil,
+	}
+	c.JSON(http.StatusOK, webResponse)
 }
 
 func NewOrderController(serv service.OrderService, userService service.UserService) *OrderController {

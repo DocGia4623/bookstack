@@ -16,6 +16,7 @@ type OrderService interface {
 	GetOrder(userID int) (models.Order, error)
 	GetUserOrder(orderId int) ([]models.Order, error)
 	CreatePaypalOrder(*paypal.Client, int) (*paypal.Order, error)
+	UpdateOrderStatus(webhookPayload map[string]interface{}) error
 }
 
 type OrderServiceImpl struct {
@@ -26,6 +27,10 @@ func NewOrderServiceImpl(repository repository.OrderRepository) OrderService {
 	return &OrderServiceImpl{
 		repo: repository,
 	}
+}
+
+func (o *OrderServiceImpl) UpdateOrderStatus(webhookPayload map[string]interface{}) error {
+	return o.repo.UpdateOrderStatus(webhookPayload)
 }
 
 func (o *OrderServiceImpl) CreatePaypalOrder(c *paypal.Client, orderId int) (*paypal.Order, error) {

@@ -14,4 +14,5 @@ func OrderRoute(controller controller.OrderController, router *gin.Engine) {
 		OrderRoutes.GET("/", controller.GetUserOrder)
 		OrderRoutes.POST("/:orderId/cancel", controller.CancelOrder)
 	}
+	router.POST("/paypal/webhook", controller.HandlePaypalWebhook)
 }

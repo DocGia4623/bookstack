@@ -6,6 +6,7 @@ import (
 	"bookstack/internal/models"
 
 	"fmt"
+	"strconv"
 
 	"github.com/jinzhu/copier"
 	"gorm.io/gorm"
@@ -16,6 +17,7 @@ type OrderRepository interface {
 	GetOrder(int) (models.Order, error)
 	GetUserOrder(int) ([]models.Order, error)
 	CancelOrder(int) error
+	UpdateOrderStatus(webhookPayload map[string]interface{}) error
 }
 
 type OrderRepositoryImpl struct {
@@ -115,4 +117,21 @@ func (o *OrderRepositoryImpl) CancelOrder(orderId int) error {
 		return err
 	}
 	return nil
+}
+
+func (o *OrderRepositoryImpl) UpdateOrderStatus(webhookPayload map[string]interface{}) error {
+	// Extract order ID from webhook payload
+	orderID, ok := webhookPayload["order_id"].(string)
+	if !ok {
+		return fmt.Errorf("invalid order ID in webhook payload")
+	}
+
+	// Convert order ID to uint
+	id, err := strconv.ParseUint(orderID, 10, 64)
+	if err != nil {
+		return fmt.Errorf("invalid order ID format: %v", err)
+	}
+
+	// Update order status to Confirmed
+	return o.DB.Model(&models.Order{}).Where("id = ?", id).Update("status", constant.Confirmed).Error
 }
